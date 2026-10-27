@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>第三回ブロスタ5v5大会</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -277,6 +278,7 @@ p{margin:0}
 .fab .dot{width:8px;height:8px;border-radius:50%;background:#c4002a}
 .drawer{position:fixed;z-index:80;top:0;right:0;bottom:0;width:min(560px,100%);display:flex;flex-direction:column;background:var(--deep);border-left:1px solid var(--line-hi);box-shadow:-20px 0 60px rgba(0,0,0,.5);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px);transform:translateX(0);transition:transform .35s cubic-bezier(.2,.9,.2,1)}
 .drawer[hidden]{display:none!important}
+[hidden]{display:none!important}
 .dr-h{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .dr-h h2{font-family:var(--f-hud);font-weight:800;letter-spacing:.16em;font-size:.95rem}
 .dr-h .st{font-size:.75rem;padding:2px 8px;border:1px solid var(--line-hi);color:var(--dim)}
@@ -473,6 +475,51 @@ html.locked,html.locked body{overflow:hidden}
   .tt-time b{font-size:1.1rem}
 }
 
+/* ---------- site rating ---------- */
+.stars{position:relative;display:inline-block;font-size:1.5rem;line-height:1;letter-spacing:.08em;white-space:nowrap}
+.stars::before{content:"★★★★★";color:var(--line)}
+.stars i{position:absolute;inset:0 auto 0 0;width:var(--p);overflow:hidden;font-style:normal}
+.stars i::before{content:"★★★★★";color:var(--gold);text-shadow:0 0 12px color-mix(in srgb,var(--gold) 55%,transparent)}
+.rate-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:stretch}
+.rate-main{position:relative;padding:22px;background:linear-gradient(150deg,var(--panel-2),var(--panel) 60%);border:1px solid var(--line-hi);display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+.rate-main::after{content:"";position:absolute;top:0;bottom:0;width:35%;left:-40%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 12%,transparent),transparent);animation:liveSweep 4.5s linear infinite;pointer-events:none}
+.rate-main .rnd{font-weight:700;font-size:.85rem;color:var(--dim)}
+.rate-avg{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.rate-avg b{font-family:var(--f-hud);font-weight:800;font-size:clamp(2.8rem,8vw,3.8rem);line-height:1;color:var(--paper);font-variant-numeric:tabular-nums}
+.rate-avg small{font-family:var(--f-hud);color:var(--mute);font-size:.9rem}
+.rate-cnt{font-size:.85rem;color:var(--dim)}
+.rate-mine{font-size:.85rem;color:var(--ok)}
+.rate-dist{display:flex;flex-direction:column;gap:8px;padding:18px 20px;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);justify-content:center}
+.rd{display:grid;grid-template-columns:34px minmax(0,1fr) 38px;align-items:center;gap:10px;font-family:var(--f-hud);font-size:.82rem;color:var(--dim)}
+.rd span:first-child{color:var(--gold);font-weight:700}
+.rd b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.rd-t{height:8px;background:var(--void);border:1px solid var(--line);overflow:hidden}
+.rd-t i{display:block;height:100%;width:var(--w);background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 60%,var(--deep)),var(--gold));transform-origin:left;animation:grow .9s cubic-bezier(.2,.9,.2,1) both}
+.rate-past{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.rate-past p{font-family:var(--f-hud);font-size:.7rem;letter-spacing:.2em;color:var(--mute)}
+.rp{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line)}
+.rp b{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.rp .stars{font-size:1rem}
+.rp span{margin-left:auto;font-family:var(--f-hud);font-size:.85rem;color:var(--dim)}
+.rate-wrap{position:fixed;inset:0;z-index:95;display:grid;place-items:end center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.rate-back{position:absolute;inset:0;background:color-mix(in srgb,var(--void) 60%,transparent);animation:fadeIn .3s ease both}
+.rate-card{position:relative;width:min(440px,100%);padding:22px 20px 18px;background:linear-gradient(160deg,var(--panel-2),var(--deep) 70%);border:1px solid var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 30px color-mix(in srgb,var(--gold) 18%,transparent);clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));text-align:center;display:flex;flex-direction:column;gap:12px;animation:rateIn .55s cubic-bezier(.2,.9,.2,1) both}
+@keyframes rateIn{from{transform:translateY(40px) scale(.96);opacity:0}}
+.rate-card .eyebrow{color:var(--gold)}
+.rate-card h3{font-family:var(--f-display);font-weight:400;font-size:1.3rem;line-height:1.35}
+.rate-card .sub{font-size:.85rem;color:var(--dim)}
+.rate-x{position:absolute;top:10px;right:14px;width:34px;height:34px;display:grid;place-items:center;background:var(--void);border:1px solid var(--line-hi);font-size:.95rem}
+.pick{display:flex;justify-content:center;gap:6px}
+.pick button{background:none;border:0;padding:4px;font-size:2.4rem;line-height:1;color:var(--line);transition:transform .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.pick button.on{color:var(--gold);text-shadow:0 0 14px color-mix(in srgb,var(--gold) 60%,transparent)}
+.pick button.pop{animation:starPop .35s cubic-bezier(.2,.9,.2,1)}
+@keyframes starPop{40%{transform:scale(1.35) rotate(-8deg)}}
+.pick-l{min-height:1.4em;font-weight:700;color:var(--gold)}
+.rate-act{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.rate-done{padding:10px 0 4px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.rate-done b{font-family:var(--f-display);font-weight:400;font-size:1.5rem;color:var(--gold);animation:starPop .5s both}
+@media (max-width:760px){.rate-grid{grid-template-columns:1fr}}
+
 /* ---------- responsive ---------- */
 @media (max-width:860px){
   .teams{grid-template-columns:1fr}
@@ -565,7 +612,7 @@ var ICON = {
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6v3l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>'
 };
 
-var NAV = [['schedule', '日程'], ['players', '選手'], ['rules', 'ルール'], ['maps', 'マップ'], ['scores', 'スコア'], ['faq', 'Q&A']];
+var NAV = [['schedule', '日程'], ['players', '選手'], ['rules', 'ルール'], ['maps', 'マップ'], ['scores', 'スコア'], ['faq', 'Q&A'], ['rating', '評価']];
 
 /* ===== public page ===== */
 function tallies(s) { var b = isNum(s.meta.pastBlue) ? Number(s.meta.pastBlue) : 0, r = isNum(s.meta.pastRed) ? Number(s.meta.pastRed) : 0; (s.matches || []).forEach(function (m) { if (m.winner === 'blue') b++; else if (m.winner === 'red') r++; }); return { b: b, r: r }; }
@@ -770,7 +817,7 @@ function render() {
   var s = view;
   if (s.meta && s.meta.title) document.title = s.meta.title;
   var y = window.scrollY;
-  root.innerHTML = headerHTML(s) + tickerHTML(s) + heroHTML(s) + scheduleHTML(s) + playersHTML(s) + rulesHTML(s) + mapsHTML(s) + scoresHTML(s) + faqHTML(s) + footHTML(s);
+  root.innerHTML = headerHTML(s) + tickerHTML(s) + heroHTML(s) + scheduleHTML(s) + playersHTML(s) + rulesHTML(s) + mapsHTML(s) + scoresHTML(s) + faqHTML(s) + ratingHTML(s) + footHTML(s);
   if (y) window.scrollTo(0, y);
   afterRender();
   var a = ss(ASK_KEY);
@@ -1269,6 +1316,9 @@ function tabBasic() {
     fld('お知らせ（トップに表示）', 'meta.notice', { area: true, rows: 4 }) +
     fld('流れるニュース（1行に1つ）', 'meta.ticker', { area: true, type: 'lines', rows: 5 }) +
     fld('質問フォームの説明（送り先など）', 'meta.askNote', { area: true, rows: 3 }) +
+    '<p class="sub-h">サイトの評価（星5つ）</p>' +
+    '<div class="row3">' + fld('評価のお願い', 'meta.rateMode', { select: [['on', '出す'], ['off', '出さない']] }) + fld('何分ごとに出すか', 'meta.rateMinutes', { input: 'number', type: 'num', ph: '3' }) + fld('評価の区切り（大会名）', 'meta.rateRound', { ph: '空なら大会名' }) + '</div>' +
+    '<p class="hint">ページを開いて指定の分数がたつと、星5つの評価をお願いする画面が出ます。評価するまで同じ間隔でまた出て、評価した人には同じ大会の間はもう出ません。次の大会のときは「評価の区切り」を変える（大会名を変えるだけでもOK）と、また全員に出ます。結果は公開ページの「評価」に出ます。</p>' +
     fld('キャラの総数（選手紹介の「/107」）', 'meta.brawlerTotal', { input: 'number', type: 'num' });
 }
 
@@ -1543,6 +1593,117 @@ function doPublish() {
   });
 }
 
+/* ===== site rating (public page only) ===== */
+var RATE_API = '/api/rating';
+var RATED_KEY = 'bs5v5-rated', CID_KEY = 'bs5v5-cid', RNEXT_KEY = 'bs5v5-rate-next';
+var STAR_WORDS = ['', 'いまいち', 'ふつう', 'いいね', 'すごくいい', '最高！'];
+var rateData = null, rateEl = null, ratePick = 0, rateSending = false;
+function rateRound(s) { return String((s.meta.rateRound || s.meta.title || '大会')).trim().slice(0, 40); }
+function rateOn(s) { return ONLINE && s.meta.rateMode !== 'off'; }
+function rateMinutes(s) { var n = Number(s.meta.rateMinutes); return isNum(s.meta.rateMinutes) && n > 0 ? Math.min(n, 600) : 3; }
+function myRating(s) { var r = ls(RATED_KEY) || {}; return r[rateRound(s)] || 0; }
+function cid() {
+  var c = ls(CID_KEY);
+  if (typeof c === 'string' && /^[a-z0-9]{12,40}$/.test(c)) return c;
+  var a = new Uint8Array(16); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach(function (_, i) { a[i] = Math.random() * 256; });
+  c = Array.from(a, function (b) { return (b % 36).toString(36); }).join('') + Date.now().toString(36);
+  c = c.slice(0, 40); ls(CID_KEY, c); return c;
+}
+function starsHTML(avg) { return '<span class="stars" role="img" aria-label="星5つ中' + avg.toFixed(1) + '"><i style="--p:' + Math.max(0, Math.min(100, avg / 5 * 100)).toFixed(1) + '%"></i></span>'; }
+function boardHTML(s) {
+  if (!ONLINE) return '<p class="empty">評価の集計は公開ページ（Netlify）で表示されます。</p>';
+  if (!rateData) return '<p class="empty">評価を読み込んでいます…</p>';
+  var rnd = rateRound(s), list = rateData.rounds || [];
+  var cur = list.filter(function (x) { return x.round === rnd; })[0] || { round: rnd, count: 0, avg: 0, dist: [0, 0, 0, 0, 0] };
+  var mine = myRating(s), max = Math.max.apply(null, cur.dist.concat([1]));
+  var dist = [5, 4, 3, 2, 1].map(function (n) {
+    var c = cur.dist[n - 1] || 0;
+    return '<div class="rd"><span>★' + n + '</span><span class="rd-t"><i style="--w:' + (c / max * 100).toFixed(1) + '%"></i></span><b>' + c + '</b></div>';
+  }).join('');
+  var main = '<div class="rate-main"><span class="rnd">' + esc(cur.round) + '</span>' +
+    (cur.count ? '<div class="rate-avg"><b>' + cur.avg.toFixed(1) + '</b><small>/ 5.0</small></div>' + starsHTML(cur.avg) + '<span class="rate-cnt">' + cur.count + '人が評価しました</span>'
+      : '<div class="rate-avg"><b>—</b><small>/ 5.0</small></div>' + starsHTML(0) + '<span class="rate-cnt">まだ評価はありません。最初の1人になってね！</span>') +
+    (mine ? '<span class="rate-mine">あなたの評価：' + '★'.repeat(mine) + '</span>' : '') +
+    (rateOn(s) ? '<button type="button" class="btn" data-rate-open="1">' + (mine ? '評価を変える' : 'このサイトを評価する') + '</button>' : '') + '</div>';
+  var past = list.filter(function (x) { return x.round !== rnd && x.count; }).slice(0, 6).map(function (x) {
+    return '<div class="rp"><b>' + esc(x.round) + '</b>' + starsHTML(x.avg) + '<span>' + x.avg.toFixed(1) + '（' + x.count + '人）</span></div>';
+  }).join('');
+  return '<div class="rate-grid">' + main + '<div class="rate-dist">' + dist + '</div></div>' + (past ? '<div class="rate-past"><p>これまでの大会</p>' + past + '</div>' : '');
+}
+function ratingHTML(s) {
+  if (s.meta.rateMode === 'off' && ONLINE && !(rateData && (rateData.rounds || []).length)) return '';
+  return '<section class="sec" id="rating"><div class="wrap">' + secH('RATING', 'サイトの評価') + '<div id="rate-board">' + boardHTML(s) + '</div></div></section>';
+}
+function paintBoard() { var b = document.getElementById('rate-board'); if (b) b.innerHTML = boardHTML(view); }
+function loadRatings() {
+  if (!ONLINE) return;
+  fetch(RATE_API, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (d && Array.isArray(d.rounds)) { rateData = d; paintBoard(); }
+  }).catch(function () {});
+}
+function rateCardHTML() {
+  return '<div class="rate-back" data-rate-later="1"></div><div class="rate-card" role="dialog" aria-modal="true" aria-labelledby="rate-h">' +
+    '<button type="button" class="rate-x" data-rate-later="1" aria-label="閉じる">✕</button>' +
+    '<span class="eyebrow">RATE THIS SITE</span><h3 id="rate-h">このサイト、どうだった？</h3><p class="sub">' + esc(rateRound(view)) + '<br>星をタップして評価してね</p>' +
+    '<div class="pick" role="radiogroup" aria-label="星の数">' + [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" role="radio" aria-checked="' + (ratePick === n) + '" aria-label="星' + n + '" data-star="' + n + '" class="' + (n <= ratePick ? 'on' : '') + '">★</button>'; }).join('') + '</div>' +
+    '<p class="pick-l" aria-live="polite">' + (STAR_WORDS[ratePick] || '') + '</p>' +
+    '<div class="rate-act"><button type="button" class="btn" data-rate-send="1"' + (ratePick && !rateSending ? '' : ' disabled') + '>' + (rateSending ? '送信中…' : '評価を送る') + '</button><button type="button" class="btn ghost" data-rate-later="1">あとで</button></div>' +
+    '<p class="status" id="rate-status" role="status"></p></div>';
+}
+function openRate() {
+  if (!rateOn(view)) return;
+  if (!rateEl) {
+    rateEl = document.createElement('div');
+    rateEl.className = 'rate-wrap';
+    document.body.appendChild(rateEl);
+    rateEl.addEventListener('click', function (e) {
+      var st = e.target.closest('[data-star]');
+      if (st) {
+        ratePick = Number(st.dataset.star);
+        rateEl.innerHTML = rateCardHTML();
+        var b = rateEl.querySelector('[data-star="' + ratePick + '"]'); if (b) { b.classList.add('pop'); b.focus({ preventScroll: true }); }
+        return;
+      }
+      if (e.target.closest('[data-rate-send]')) return sendRate();
+      if (e.target.closest('[data-rate-later]')) return closeRate(true);
+    });
+  }
+  ratePick = myRating(view); rateSending = false;
+  rateEl.innerHTML = rateCardHTML();
+  rateEl.hidden = false;
+}
+function closeRate(later) {
+  if (!rateEl || rateEl.hidden) return;
+  rateEl.hidden = true; rateEl.innerHTML = '';
+  if (later && !myRating(view)) ls(RNEXT_KEY, { round: rateRound(view), at: Date.now() + rateMinutes(view) * 6e4 });
+}
+function sendRate() {
+  if (!ratePick || rateSending) return;
+  rateSending = true; rateEl.innerHTML = rateCardHTML();
+  var rnd = rateRound(view), stars = ratePick;
+  fetch(RATE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ round: rnd, stars: stars, cid: cid() }) })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      var all = ls(RATED_KEY) || {}; all[rnd] = stars; ls(RATED_KEY, all);
+      if (d && Array.isArray(d.rounds)) rateData = d;
+      paintBoard();
+      rateEl.querySelector('.rate-card').innerHTML = '<div class="rate-done"><b>' + '★'.repeat(stars) + '</b><h3>ありがとう！</h3><p class="sub">評価は「評価」のところで見られます。</p></div>';
+      setTimeout(function () { closeRate(false); }, 1800);
+    }, function () {
+      rateSending = false; rateEl.innerHTML = rateCardHTML();
+      var el = document.getElementById('rate-status'); if (el) el.textContent = '送れませんでした。電波のいいところで、もう一度押してください。';
+    });
+}
+function rateTick() {
+  if (!rateOn(view) || myRating(view) || document.hidden) return;
+  if ((rateEl && !rateEl.hidden) || (modalEl && !modalEl.hidden) || adminOpen) return;
+  var rnd = rateRound(view), nx = ls(RNEXT_KEY);
+  if (!nx || nx.round !== rnd) { ls(RNEXT_KEY, { round: rnd, at: Date.now() + rateMinutes(view) * 6e4 }); return; }
+  if (Date.now() >= nx.at) openRate();
+}
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && rateEl && !rateEl.hidden) closeRate(true); });
+root.addEventListener('click', function (e) { if (e.target.closest('[data-rate-open]')) openRate(); });
+
 /* ===== live data from GitHub (public page only) ===== */
 function stampOf(x) { return Math.max(Date.parse(x.updatedAt) || 0, Date.parse((x.meta || {}).statsAt) || 0); }
 function loadRemote() {
@@ -1560,6 +1721,7 @@ render();
 startBg();
 loadRemote();
 setInterval(loadRemote, 5 * 6e4);
+if (ONLINE) { loadRatings(); setInterval(loadRatings, 2 * 6e4); rateTick(); setInterval(rateTick, 5000); }
 (function () { var op = ss(OPEN_KEY); if (op) openDetail(op); })();
 (function () {
   var pend = ss(PENDING_KEY);
@@ -1578,3 +1740,5 @@ if (window.claude && typeof window.claude.use === 'function') {
 }
 })();
 </script>
+
+</body></html>

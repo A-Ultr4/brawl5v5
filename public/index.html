@@ -520,6 +520,94 @@ html.locked,html.locked body{overflow:hidden}
 .rate-done b{font-family:var(--f-display);font-weight:400;font-size:1.5rem;color:var(--gold);animation:starPop .5s both}
 @media (max-width:760px){.rate-grid{grid-template-columns:1fr}}
 
+/* ---------- cheer (streak) ---------- */
+:root{--fire:#ff7a1a;--fire-hi:#ffcf3f;--fire-deep:#b83a00}
+.ch-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:18px;align-items:start}
+.streak{position:relative;padding:22px 20px 20px;background:radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--fire) 22%,var(--panel-2)),var(--panel) 70%);border:1px solid color-mix(in srgb,var(--fire) 55%,var(--line));display:flex;flex-direction:column;gap:14px;overflow:hidden;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+.st-top{display:flex;align-items:center;gap:16px}
+.flame{position:relative;width:84px;height:96px;flex:none}
+.flame svg{width:100%;height:100%;display:block;overflow:visible}
+.flame .f-out{fill:url(#fireg)}
+.flame .f-in{fill:#fff3b0}
+.flame.off .f-out{fill:#3a4580}
+.flame.off .f-in{fill:#5a67a8}
+.flame.on svg{transform-origin:50% 90%;animation:flicker 1.6s ease-in-out infinite;filter:drop-shadow(0 0 14px color-mix(in srgb,var(--fire) 70%,transparent))}
+@keyframes flicker{0%,100%{transform:scale(1) rotate(-1deg)}30%{transform:scale(1.04,.97) rotate(1.5deg)}60%{transform:scale(.97,1.05) rotate(-1.5deg)}}
+.flame.boom svg{animation:boom .9s cubic-bezier(.2,.9,.2,1),flicker 1.6s 0.9s ease-in-out infinite}
+@keyframes boom{0%{transform:scale(.6)}45%{transform:scale(1.35) rotate(-6deg)}70%{transform:scale(.92)}100%{transform:scale(1)}}
+.spark{position:absolute;left:50%;top:55%;width:8px;height:8px;border-radius:50%;background:var(--fire-hi);opacity:0;pointer-events:none}
+.flame.boom .spark{animation:spark .9s ease-out forwards}
+@keyframes spark{0%{opacity:1;transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(-70px) scale(.3)}}
+.st-num{min-width:0;display:flex;flex-direction:column;line-height:1.1}
+.st-num b{font-family:var(--f-hud);font-weight:800;font-size:clamp(3rem,10vw,4.2rem);line-height:1;color:var(--fire-hi);text-shadow:0 0 22px color-mix(in srgb,var(--fire) 60%,transparent);font-variant-numeric:tabular-nums}
+.st-num.zero b{color:var(--mute);text-shadow:none}
+.st-num span{font-weight:700;font-size:1.02rem}
+.st-num small{font-size:.78rem;color:var(--dim);margin-top:4px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:12px 10px;background:color-mix(in srgb,var(--void) 70%,transparent);border:1px solid var(--line)}
+.wd{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--mute)}
+.wd i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:2px solid var(--line);font-style:normal;font-size:.8rem;color:#fff}
+.wd.on i{background:linear-gradient(160deg,var(--fire-hi),var(--fire));border-color:var(--fire);box-shadow:0 0 10px color-mix(in srgb,var(--fire) 50%,transparent)}
+.wd.on{color:var(--fire-hi)}
+.wd.today{color:var(--ink)}
+.wd.today:not(.on) i{border-color:var(--fire);border-style:dashed;animation:todayPulse 1.6s ease-in-out infinite}
+@keyframes todayPulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--fire) 25%,transparent)}}
+.st-msg{font-weight:700;font-size:.92rem;text-align:center}
+.st-msg.risk{color:var(--fire-hi)}
+.st-msg.done{color:var(--ok)}
+.st-msg small{display:block;font-weight:500;font-size:.78rem;color:var(--dim);font-family:var(--f-hud)}
+.pick-h{font-size:.78rem;font-weight:700;color:var(--dim)}
+.oshi{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;-webkit-overflow-scrolling:touch}
+.oshi::-webkit-scrollbar{display:none}
+.oshi button{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:74px;padding:8px 4px;background:var(--void);border:1px solid var(--line);font-size:.7rem;font-weight:700;color:var(--dim);transition:border-color .2s,transform .2s}
+.oshi button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oshi .av{width:40px;height:40px;border-radius:50%;background:var(--panel-2) center/cover;border:2px solid var(--line-hi);display:grid;place-items:center;font-family:var(--f-hud);font-weight:800;font-size:.8rem;color:#fff}
+.oshi .blue .av{border-color:var(--blue)}
+.oshi .red .av{border-color:var(--red)}
+.oshi .tb.blue .av{background:linear-gradient(160deg,var(--blue-hi),var(--blue-deep))}
+.oshi .tb.red .av{background:linear-gradient(160deg,var(--red-hi),var(--red-deep))}
+.oshi button.on{border-color:var(--fire);color:var(--ink);transform:translateY(-2px);box-shadow:0 6px 18px color-mix(in srgb,var(--fire) 25%,transparent)}
+.oshi button:disabled{opacity:.45}
+.oshi button.on:disabled{opacity:1}
+.btn.fire{width:100%;padding:14px 20px;font-size:1.05rem;color:#2a0e00;background:linear-gradient(180deg,var(--fire-hi),var(--fire));box-shadow:0 5px 0 var(--fire-deep);clip-path:none;border-radius:14px;transition:transform .1s,box-shadow .1s,filter .2s}
+.btn.fire:active{transform:translateY(4px);box-shadow:0 1px 0 var(--fire-deep)}
+.btn.fire svg{width:22px;height:22px}
+.btn.fire:disabled{filter:none;background:var(--panel-2);color:var(--dim);box-shadow:0 5px 0 var(--void)}
+.btn.fire:disabled svg{fill:var(--mute)}
+.ch-board{display:flex;flex-direction:column;gap:14px}
+.tug{padding:16px 18px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.tug-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-family:var(--f-hud);font-weight:800}
+.tug-h .b{color:var(--blue-hi)}
+.tug-h .r{color:var(--red-hi)}
+.tug-h b{font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+.tug-h em{font-style:normal;font-family:var(--f-body);font-size:.75rem;color:var(--mute);font-weight:500;text-align:center}
+.tug-bar{position:relative;display:flex;height:14px;background:var(--void);border:1px solid var(--line);overflow:hidden}
+.tug-bar i{display:block;height:100%;transition:width 1s cubic-bezier(.2,.9,.2,1)}
+.tug-bar .b{background:linear-gradient(90deg,var(--blue-deep),var(--blue))}
+.tug-bar .r{background:linear-gradient(90deg,var(--red),var(--red-deep))}
+.tug-bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:var(--gold)}
+.fans{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fan{display:grid;grid-template-columns:26px 36px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-left:3px solid var(--tc)}
+.fan.blue{--tc:var(--blue)}
+.fan.red{--tc:var(--red)}
+.fan .no{font-family:var(--f-hud);font-weight:800;color:var(--mute);text-align:center}
+.fan:nth-child(1) .no{color:var(--gold)}
+.fan .av{width:36px;height:36px;border-radius:50%;background:var(--panel-2) center/cover;border:2px solid var(--tc)}
+.fan b{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fan .cn{display:flex;align-items:center;gap:4px;font-family:var(--f-hud);font-weight:800;color:var(--fire-hi);white-space:nowrap}
+.fan .cn small{color:var(--mute);font-weight:600;font-size:.72rem;margin-left:4px}
+.ico-f{width:16px;height:16px;flex:none;fill:var(--fire)}
+.stats dd.chr{display:flex;align-items:center;gap:3px;color:var(--fire-hi)}
+.stats dd.chr .ico-f{width:14px;height:14px}
+.pm-cheer{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:8px;padding:10px 14px;background:color-mix(in srgb,var(--fire) 10%,var(--void));border:1px solid color-mix(in srgb,var(--fire) 45%,var(--line))}
+.pm-cheer .cn{display:flex;align-items:center;gap:5px;font-family:var(--f-hud);font-weight:800;font-size:1.3rem;color:var(--fire-hi)}
+.pm-cheer .cn .ico-f{width:20px;height:20px}
+.pm-cheer small{font-size:.78rem;color:var(--dim)}
+.pm-cheer .btn.fire{width:auto;margin-left:auto;padding:9px 16px;font-size:.88rem;border-radius:10px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:120;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(180deg,var(--fire-hi),var(--fire));color:#2a0e00;font-weight:800;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:toastIn 2.6s cubic-bezier(.2,.9,.2,1) both;pointer-events:none;width:max-content;max-width:calc(100% - 32px);text-align:center;line-height:1.4}
+.toast svg{width:20px;height:20px;fill:#b83a00}
+@keyframes toastIn{0%{opacity:0;transform:translate(-50%,30px) scale(.9)}12%{opacity:1;transform:translate(-50%,0) scale(1.05)}20%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+@media (max-width:860px){.ch-grid{grid-template-columns:1fr}}
+
 /* ---------- responsive ---------- */
 @media (max-width:860px){
   .teams{grid-template-columns:1fr}
@@ -609,10 +697,11 @@ function ss(k, v) { try { if (v === undefined) return JSON.parse(sessionStorage.
 var ICON = {
   brand: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 28 9v14L16 30 4 23V9z" fill="none" style="stroke:var(--gold)" stroke-width="2"/><path d="M16 7 9 11v10l7 4z" style="fill:var(--blue)"/><path d="M16 7l7 4v10l-7 4z" style="fill:var(--red)"/></svg>',
   trophy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path style="fill:var(--gold)" d="M7 3h10v2h4v3a5 5 0 0 1-4.6 5A5 5 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A5 5 0 0 1 7.6 13 5 5 0 0 1 3 8V5h4zm0 4H5v1a3 3 0 0 0 2 2.8zm10 0v3.8A3 3 0 0 0 19 8V7z"/></svg>',
+  flame: '<svg class="ico-f" viewBox="0 0 64 72" aria-hidden="true"><path d="M32 2c3 10 13 16 18 26 3.5 7 4.5 12 4.5 17A22.5 22.5 0 0 1 9.5 45c0-9 4.5-16 10.5-21.5.3 6 3 10.5 7.5 12.5-2-14 .5-25 4.5-34z"/></svg>',
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6v3l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>'
 };
 
-var NAV = [['schedule', '日程'], ['players', '選手'], ['rules', 'ルール'], ['maps', 'マップ'], ['scores', 'スコア'], ['faq', 'Q&A'], ['rating', '評価']];
+var NAV = [['schedule', '日程'], ['players', '選手'], ['cheer', '応援'], ['rules', 'ルール'], ['maps', 'マップ'], ['scores', 'スコア'], ['faq', 'Q&A'], ['rating', '評価']];
 
 /* ===== public page ===== */
 function tallies(s) { var b = isNum(s.meta.pastBlue) ? Number(s.meta.pastBlue) : 0, r = isNum(s.meta.pastRed) ? Number(s.meta.pastRed) : 0; (s.matches || []).forEach(function (m) { if (m.winner === 'blue') b++; else if (m.winner === 'red') r++; }); return { b: b, r: r }; }
@@ -700,6 +789,7 @@ function cardHTML(p, k, i, total, sc) {
   if (isNum(p.trophies)) stats += '<div><dt>TROPHIES</dt><dd class="tro"><span data-num="1">' + fmt(p.trophies) + '</span>' + deltaHTML(p) + '</dd></div>';
   if (sc) stats += '<div><dt>SCORE</dt><dd class="scr">' + sc.total + '</dd></div>';
   if (isNum(p.prestige)) stats += '<div><dt>PRESTIGE</dt><dd>' + fmt(p.prestige) + '</dd></div>';
+  if (cheerOn(view) && pid(p)) stats += '<div><dt>CHEER</dt><dd class="chr">' + ICON.flame + '<span data-cheer="' + pid(p) + '">' + cheerCount(pid(p)) + '</span></dd></div>';
   if (isNum(p.brawlers)) stats += '<div><dt>BRAWLERS</dt><dd>' + fmt(p.brawlers) + (isNum(total) ? '<small>/' + total + '</small>' : '') + '</dd></div>';
   return '<article class="card ' + k + '" style="--d:' + (i * 0.9).toFixed(1) + 's" data-pk="' + k + ':' + i + '" role="button" tabindex="0" aria-label="' + esc(p.name) + 'の詳細を見る">' +
     '<span class="more" aria-hidden="true">DETAIL ›</span>' +
@@ -817,7 +907,7 @@ function render() {
   var s = view;
   if (s.meta && s.meta.title) document.title = s.meta.title;
   var y = window.scrollY;
-  root.innerHTML = headerHTML(s) + tickerHTML(s) + heroHTML(s) + scheduleHTML(s) + playersHTML(s) + rulesHTML(s) + mapsHTML(s) + scoresHTML(s) + faqHTML(s) + ratingHTML(s) + footHTML(s);
+  root.innerHTML = headerHTML(s) + tickerHTML(s) + heroHTML(s) + scheduleHTML(s) + playersHTML(s) + cheerHTML(s) + rulesHTML(s) + mapsHTML(s) + scoresHTML(s) + faqHTML(s) + ratingHTML(s) + footHTML(s);
   if (y) window.scrollTo(0, y);
   afterRender();
   var a = ss(ASK_KEY);
@@ -1129,6 +1219,7 @@ function detailHTML(s, pk) {
     (p.comment ? '<p class="comment">' + nl2br(p.comment) + '</p>' : '') +
     '<div class="pm-bio-wrap"><p class="pm-lbl">PROFILE ／ 選手紹介</p><div class="pm-bio" tabindex="0">' + (bio ? nl2br(bio) : '<span class="pm-bio-empty">紹介文はまだありません。</span>') + '</div></div>' +
     (isNum(p.trophies) ? '<div class="pm-big"><span>TROPHIES</span><b class="num">' + fmt(p.trophies) + '</b>' + deltaHTML(p) + '</div>' : '') +
+    cheerRowHTML(p) +
     '<div class="bars">' +
     barHTML('最高トロフィー', p.highest, max('highest')) +
     barHTML('3対3の勝利数', p.wins3v3, max('wins3v3')) +
@@ -1316,9 +1407,11 @@ function tabBasic() {
     fld('お知らせ（トップに表示）', 'meta.notice', { area: true, rows: 4 }) +
     fld('流れるニュース（1行に1つ）', 'meta.ticker', { area: true, type: 'lines', rows: 5 }) +
     fld('質問フォームの説明（送り先など）', 'meta.askNote', { area: true, rows: 3 }) +
+    '<p class="sub-h">応援（連続記録）</p>' +
+    fld('応援', 'meta.cheerMode', { select: [['on', 'できる'], ['off', 'できない']] }) +
     '<p class="sub-h">サイトの評価（星5つ）</p>' +
-    '<div class="row3">' + fld('評価のお願い', 'meta.rateMode', { select: [['on', '出す'], ['off', '出さない']] }) + fld('何分ごとに出すか', 'meta.rateMinutes', { input: 'number', type: 'num', ph: '3' }) + fld('評価の区切り（大会名）', 'meta.rateRound', { ph: '空なら大会名' }) + '</div>' +
-    '<p class="hint">ページを開いて指定の分数がたつと、星5つの評価をお願いする画面が出ます。評価するまで同じ間隔でまた出て、評価した人には同じ大会の間はもう出ません。次の大会のときは「評価の区切り」を変える（大会名を変えるだけでもOK）と、また全員に出ます。結果は公開ページの「評価」に出ます。</p>' +
+    '<div class="row3">' + fld('評価のお願い', 'meta.rateMode', { select: [['on', '出す'], ['off', '出さない']] }) + fld('何分ごとに出すか', 'meta.rateMinutes', { input: 'number', type: 'num', ph: '3' }) + fld('大会の区切り（評価と応援のリセット）', 'meta.rateRound', { ph: '空なら大会名' }) + '</div>' +
+    '<p class="hint">ページを開いて指定の分数がたつと、星5つの評価をお願いする画面が出ます。評価するまで同じ間隔でまた出て、評価した人には同じ大会の間はもう出ません。次の大会のときは「大会の区切り」を変える（大会名を変えるだけでもOK）と、評価のお願いがまた全員に出て、応援の数と連続記録も0からになります。結果は公開ページの「評価」「応援」に出ます。</p>' +
     fld('キャラの総数（選手紹介の「/107」）', 'meta.brawlerTotal', { input: 'number', type: 'num' });
 }
 
@@ -1704,6 +1797,131 @@ function rateTick() {
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && rateEl && !rateEl.hidden) closeRate(true); });
 root.addEventListener('click', function (e) { if (e.target.closest('[data-rate-open]')) openRate(); });
 
+/* ===== cheer with daily streak (public page only) ===== */
+var CHEER_API = '/api/cheer', OSHI_KEY = 'bs5v5-oshi';
+var cheerData = null, cheerBusy = false, cheerBoomUntil = 0;
+var FLAME_BIG = '<svg viewBox="0 0 64 72" aria-hidden="true"><defs><linearGradient id="fireg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d12"/><stop offset=".6" stop-color="#ff8a1a"/><stop offset="1" stop-color="#ffd84a"/></linearGradient></defs><path class="f-out" d="M32 2c3 10 13 16 18 26 3.5 7 4.5 12 4.5 17A22.5 22.5 0 0 1 9.5 45c0-9 4.5-16 10.5-21.5.3 6 3 10.5 7.5 12.5-2-14 .5-25 4.5-34z"/><path class="f-in" d="M32 40c5 4.5 8.5 8.5 8.5 13.5a8.5 8.5 0 0 1-17 0c0-5 3.3-9 8.5-13.5z"/></svg>';
+function cheerOn(s) { return ONLINE && s.meta.cheerMode !== 'off'; }
+function pid(p) { var t = String(p.tag || '').replace(/^#/, '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return t.length >= 3 ? 'p:' + t.slice(0, 20) : ''; }
+function cheerCount(t) { return cheerData && cheerData.totals ? (cheerData.totals[t] || 0) : 0; }
+function cheerFans(t) { return cheerData && cheerData.fans ? (cheerData.fans[t] || 0) : 0; }
+function targets(s) {
+  var out = [];
+  ['blue', 'red'].forEach(function (k) { out.push({ id: 't:' + k, k: k, team: true, name: s.teams[k].name || k.toUpperCase(), img: '' }); });
+  ['blue', 'red'].forEach(function (k) { (s.teams[k].members || []).forEach(function (p) { var id = pid(p); if (id) out.push({ id: id, k: k, team: false, name: p.name || '選手', img: safeImg(p.img) }); }); });
+  return out;
+}
+function targetName(s, id) { var t = targets(s).filter(function (x) { return x.id === id; })[0]; return t ? (t.team ? t.k.toUpperCase() + '（' + t.name + '）' : t.name) : ''; }
+function avHTML(x) { return '<span class="av"' + (x.img ? ' style="background-image:url(' + x.img + ')"' : '') + '>' + (x.img ? '' : (x.team ? x.k.toUpperCase() : esc(firstChar(x.name)))) + '</span>'; }
+function cheerRowHTML(p) {
+  if (!cheerOn(view) || !pid(p)) return '';
+  var id = pid(p), done = cheerData && cheerData.me && cheerData.me.today;
+  return '<div class="pm-cheer"><span class="cn">' + ICON.flame + '<span data-cheer="' + id + '">' + cheerCount(id) + '</span></span><small>回の応援 ・ <span data-fans="' + id + '">' + cheerFans(id) + '</span>人のファン</small>' +
+    '<button type="button" class="btn fire" data-cheer-go="' + id + '"' + (done ? ' disabled' : '') + '>' + (done ? '今日は応援済み' : ICON.flame + 'この選手を応援') + '</button></div>';
+}
+var WD = '日月火水木金土';
+function streakHTML(s) {
+  if (!cheerData) return '<p class="empty">読み込んでいます…</p>';
+  var me = cheerData.me || { streak: 0, best: 0, week: [], today: null, days: 0 };
+  var today = me.today, st = me.streak || 0;
+  var sparks = '';
+  for (var i = 0; i < 10; i++) sparks += '<i class="spark" style="--a:' + (i * 36) + 'deg"></i>';
+  var flame = '<div class="flame ' + (st > 0 || today ? 'on' : 'off') + (Date.now() < cheerBoomUntil ? ' boom' : '') + '" id="ch-flame">' + FLAME_BIG + sparks + '</div>';
+  var num = '<div class="st-num' + (st ? '' : ' zero') + '"><b>' + st + '</b><span>' + (st ? '日連続で応援中！' : '日連続') + '</span><small>この大会の最高記録 ' + (me.best || 0) + '日 ・ 応援した日 ' + (me.days || 0) + '日</small></div>';
+  var week = '<div class="week" aria-label="この7日間の応援">' + (me.week || []).map(function (w, i, a) {
+    var d = new Date(Date.parse(w.day + 'T12:00:00+09:00'));
+    return '<div class="wd' + (w.on ? ' on' : '') + (i === a.length - 1 ? ' today' : '') + '"><span>' + (i === a.length - 1 ? '今日' : WD[d.getUTCDay()]) + '</span><i>' + (w.on ? '✓' : '') + '</i></div>';
+  }).join('') + '</div>';
+  var msg;
+  if (today) msg = '<p class="st-msg done">今日の応援は完了！（' + esc(targetName(s, today)) + '）<small id="ch-cd" data-to="' + cheerData.nextAt + '">次の応援まで --:--:--</small></p>';
+  else if (st > 0) msg = '<p class="st-msg risk">今日応援しないと、' + st + '日の連続記録が消えちゃう！</p>';
+  else msg = '<p class="st-msg">1日1回、推しを応援して連続記録をのばそう！</p>';
+  var pick = today || ls(OSHI_KEY) || '';
+  var chips = targets(s).map(function (x) {
+    return '<button type="button" class="' + x.k + (x.team ? ' tb' : '') + (x.id === pick ? ' on' : '') + '" data-oshi="' + x.id + '" aria-pressed="' + (x.id === pick) + '"' + (today ? ' disabled' : '') + '>' + avHTML(x) + '<span>' + esc(x.team ? x.k.toUpperCase() : x.name) + '</span></button>';
+  }).join('');
+  var valid = targets(s).some(function (x) { return x.id === pick; });
+  return '<div class="st-top">' + flame + num + '</div>' + week + msg +
+    '<p class="pick-h">応援する相手（チームか選手をえらんでね）</p><div class="oshi">' + chips + '</div>' +
+    '<button type="button" class="btn fire" data-cheer-now="1"' + (today || !valid || cheerBusy ? ' disabled' : '') + '>' + ICON.flame + (today ? '今日の応援は完了！' : cheerBusy ? '応援中…' : valid ? '応援する！' : '応援する相手をえらんでね') + '</button>';
+}
+function cheerBoardHTML(s) {
+  if (!cheerData) return '';
+  var t = targets(s), sum = { blue: 0, red: 0 };
+  t.forEach(function (x) { sum[x.k] += cheerCount(x.id); });
+  var all = sum.blue + sum.red, bw = all ? sum.blue / all * 100 : 50;
+  var tug = '<div class="tug"><div class="tug-h"><span class="b">BLUE<br><b>' + sum.blue + '</b></span><em>チームへの応援<br>（選手への応援もふくむ）</em><span class="r" style="text-align:right">RED<br><b>' + sum.red + '</b></span></div>' +
+    '<div class="tug-bar"><i class="b" style="width:' + bw.toFixed(1) + '%"></i><i class="r" style="width:' + (100 - bw).toFixed(1) + '%"></i></div></div>';
+  var ps = t.filter(function (x) { return !x.team; }).sort(function (a, b) { return cheerCount(b.id) - cheerCount(a.id) || cheerFans(b.id) - cheerFans(a.id); });
+  var list = '<ol class="fans">' + ps.map(function (x, i) {
+    return '<li class="fan ' + x.k + '"><span class="no">' + (i + 1) + '</span>' + avHTML(x) + '<b>' + esc(x.name) + '</b><span class="cn">' + ICON.flame + cheerCount(x.id) + '<small>' + cheerFans(x.id) + '人</small></span></li>';
+  }).join('') + '</ol>';
+  return tug + list;
+}
+function cheerHTML(s) {
+  if (ONLINE && s.meta.cheerMode === 'off') return '';
+  var aside = cheerData ? '今日の応援 ' + (cheerData.todayTotal || 0) + '回 ・ 合計 ' + (cheerData.total || 0) + '回' : '';
+  var body = ONLINE ? '<div class="ch-grid"><div class="streak" id="ch-streak">' + streakHTML(s) + '</div><div class="ch-board" id="ch-board">' + cheerBoardHTML(s) + '</div></div>'
+    : '<p class="empty">応援（連続記録）は公開ページでできます。</p>';
+  return '<section class="sec" id="cheer"><div class="wrap">' + secH('CHEER', '応援', '<span id="ch-aside">' + aside + '</span>') + body + '</div></section>';
+}
+function paintCheer() {
+  var a = document.getElementById('ch-streak'); if (a) a.innerHTML = streakHTML(view);
+  var b = document.getElementById('ch-board'); if (b) b.innerHTML = cheerBoardHTML(view);
+  var c = document.getElementById('ch-aside'); if (c && cheerData) c.textContent = '今日の応援 ' + (cheerData.todayTotal || 0) + '回 ・ 合計 ' + (cheerData.total || 0) + '回';
+  document.querySelectorAll('[data-cheer]').forEach(function (el) { el.textContent = cheerCount(el.dataset.cheer); });
+  document.querySelectorAll('[data-fans]').forEach(function (el) { el.textContent = cheerFans(el.dataset.fans); });
+  document.querySelectorAll('[data-cheer-go]').forEach(function (el) {
+    var done = cheerData && cheerData.me && cheerData.me.today;
+    el.disabled = !!done; el.innerHTML = done ? '今日は応援済み' : ICON.flame + 'この選手を応援';
+  });
+  tickCd();
+}
+function tickCd() {
+  var el = document.getElementById('ch-cd'); if (!el) return;
+  var left = Math.max(0, Number(el.dataset.to) - Date.now());
+  if (!left) { loadCheer(); return; }
+  var h = Math.floor(left / 36e5), m = Math.floor(left / 6e4) % 60, sec = Math.floor(left / 1e3) % 60;
+  el.textContent = '次の応援まで ' + h + ':' + pad(m) + ':' + pad(sec);
+}
+function loadCheer() {
+  if (!cheerOn(view)) return;
+  fetch(CHEER_API + '?round=' + encodeURIComponent(rateRound(view)) + '&cid=' + cid(), { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { if (d && d.me) { cheerData = d; if (Date.now() >= cheerBoomUntil) paintCheer(); } })
+    .catch(function () {});
+}
+function toast(html) {
+  var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.innerHTML = html;
+  document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2700);
+}
+function doCheer(target) {
+  if (!cheerOn(view) || cheerBusy || !target) return;
+  cheerBusy = true; paintCheer();
+  fetch(CHEER_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ round: rateRound(view), cid: cid(), target: target }) })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      cheerBusy = false;
+      if (d && d.me) cheerData = d;
+      ls(OSHI_KEY, target);
+      if (d.already) { paintCheer(); toast('今日はもう応援済み！明日また来てね'); return; }
+      cheerBoomUntil = Date.now() + 1000;
+      paintCheer();
+      setTimeout(function () { var f = document.getElementById('ch-flame'); if (f) f.classList.remove('boom'); }, 1000);
+      toast(ICON.flame + (d.me.streak > 1 ? d.me.streak + '日連続！ ' : '') + esc(targetName(view, target)) + 'を応援しました！');
+    }, function () {
+      cheerBusy = false; paintCheer();
+      toast('送れませんでした。電波のいいところで、もう一度押してね');
+    });
+}
+document.addEventListener('click', function (e) {
+  var o = e.target.closest('[data-oshi]');
+  if (o && !o.disabled) { ls(OSHI_KEY, o.dataset.oshi); paintCheer(); return; }
+  if (e.target.closest('[data-cheer-now]')) { doCheer(ls(OSHI_KEY)); return; }
+  var g = e.target.closest('[data-cheer-go]');
+  if (g && !g.disabled) { e.stopPropagation(); doCheer(g.dataset.cheerGo); }
+}, true);
+
 /* ===== live data from GitHub (public page only) ===== */
 function stampOf(x) { return Math.max(Date.parse(x.updatedAt) || 0, Date.parse((x.meta || {}).statsAt) || 0); }
 function loadRemote() {
@@ -1721,7 +1939,7 @@ render();
 startBg();
 loadRemote();
 setInterval(loadRemote, 5 * 6e4);
-if (ONLINE) { loadRatings(); setInterval(loadRatings, 2 * 6e4); rateTick(); setInterval(rateTick, 5000); }
+if (ONLINE) { loadRatings(); setInterval(loadRatings, 2 * 6e4); rateTick(); setInterval(rateTick, 5000); loadCheer(); setInterval(function () { if (!document.hidden) loadCheer(); }, 6e4); setInterval(tickCd, 1000); }
 (function () { var op = ss(OPEN_KEY); if (op) openDetail(op); })();
 (function () {
   var pend = ss(PENDING_KEY);

@@ -42,12 +42,26 @@ const nameJa = (n) => {
   return JA[k] || k.charAt(0) + k.slice(1).toLowerCase();
 };
 
-async function fetchPlayer(tag) {
+// Source 1 (preferred): the official Brawl Stars API through RoyaleAPI's proxy,
+// when a key is set in the Netlify environment variable BS_API_KEY
+// (key created at developer.brawlstars.com with IP 45.79.218.79 allowed).
+// Source 2 (fallback): Brawl Time Ninja's public endpoint.
+async function fetchRaw(tag) {
+  const key = process.env.BS_API_KEY;
+  if (key) {
+    const r = await fetch("https://bsproxy.royaleapi.dev/v1/players/%23" + tag, { headers: { authorization: "Bearer " + key, accept: "application/json" } });
+    if (!r.ok) throw new Error("official http " + r.status);
+    return r.json();
+  }
   const url = "https://brawltime.ninja/api/player.byTag?input=" + encodeURIComponent(JSON.stringify({ json: tag }));
   const r = await fetch(url, { headers: { "user-agent": "brawl5v5-tournament-site (hourly, 10 players)", accept: "application/json" } });
   if (!r.ok) throw new Error("http " + r.status);
   const j = await r.json();
-  const p = j && j.result && j.result.data && j.result.data.json;
+  return j && j.result && j.result.data && j.result.data.json;
+}
+
+async function fetchPlayer(tag) {
+  const p = await fetchRaw(tag);
   if (!p || typeof p.trophies !== "number") throw new Error("no data");
   const bs = Array.isArray(p.brawlers) ? p.brawlers : Object.values(p.brawlers || {});
   let top = null;
@@ -60,8 +74,8 @@ async function fetchPlayer(tag) {
     club: (p.club && p.club.name) || "",
     brawlers: bs.length,
     prestige: p.totalPrestigeLevel,
-    rank: rankJa(p.rankedRankName),
-    rankBest: rankJa(p.highestAllTimeRankedRankName),
+    rank: p.rankedRankName ? rankJa(p.rankedRankName) : undefined,
+    rankBest: p.highestAllTimeRankedRankName ? rankJa(p.highestAllTimeRankedRankName) : undefined,
     topBrawler: top ? `${nameJa(top.name)}（${Number(top.trophies || 0).toLocaleString("en-US")}）` : "",
   };
 }
@@ -85,8 +99,9 @@ async function refresh(store, old) {
       }
     })
   );
-  const out = { at: new Date().toISOString(), players, errors };
-  if (Object.keys(players).length) await store.setJSON("latest", out);
+  // stored even when every fetch failed, so a failing source is retried at most once per TTL
+  const out = { at: new Date().toISOString(), players, errors, source: process.env.BS_API_KEY ? "official" : "brawltime" };
+  await store.setJSON("latest", out);
   return out;
 }
 

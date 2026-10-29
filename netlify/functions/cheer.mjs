@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 
 // Daily cheers with a Duolingo-style streak.
-// Key: k/<round>/<day>/<cid>/<target>  (one cheer per browser per Japan day)
+// Key: k/<hex(round)>/<day>/<cid>/<t_blue|p_TAG>  (one cheer per browser per Japan day)
 //   round  = tournament key (changing it resets everything)
 //   target = t:blue | t:red | p:<PLAYERTAG>
 const json = (o, status = 200) =>
@@ -18,18 +18,30 @@ const shift = (d, n) => fmtDay(dayMs(d) + n * 864e5);
 const TARGET = /^(t:(blue|red)|p:[A-Z0-9]{3,20})$/;
 const CID = /^[a-z0-9]{12,40}$/;
 
+// Keys are ASCII only: listing with a prefix that contains "%" never matches,
+// so the round is stored as hex and the target as t_blue / p_TAG.
+const hex = (str) => Buffer.from(str, "utf8").toString("hex");
+const roundOf = (seg) => {
+  if (/^[0-9a-f]+$/.test(seg) && seg.length % 2 === 0) { try { return Buffer.from(seg, "hex").toString("utf8"); } catch {} }
+  try { return decodeURIComponent(seg); } catch { return null; }
+};
+const targetOf = (seg) => {
+  let t = seg;
+  try { t = decodeURIComponent(seg); } catch {}
+  return t.replace(/^([tp])_/, "$1:");
+};
+
 async function snapshot(store, round, cid) {
-  const r = encodeURIComponent(round);
-  const { blobs } = await store.list({ prefix: `k/${r}/` });
+  const { blobs } = await store.list({ prefix: "k/" });
   const today = fmtDay(Date.now());
   const totals = {}, fanSets = {}, mine = {};
   let all = 0, todayAll = 0;
   for (const b of blobs) {
     const parts = b.key.split("/");
     if (parts.length !== 5) continue;
-    const [, , day, who, enc] = parts;
-    let target;
-    try { target = decodeURIComponent(enc); } catch { continue; }
+    const [, rseg, day, who, tseg] = parts;
+    if (roundOf(rseg) !== round) continue;
+    const target = targetOf(tseg);
     if (!TARGET.test(target)) continue;
     totals[target] = (totals[target] || 0) + 1;
     (fanSets[target] ||= new Set()).add(who);
@@ -82,11 +94,9 @@ export default async (req) => {
   const target = String((body && body.target) || "");
   if (!round || !CID.test(cid) || !TARGET.test(target)) return json({ error: "bad_request" }, 400);
 
-  const r = encodeURIComponent(round);
-  const today = fmtDay(Date.now());
-  const done = await store.list({ prefix: `k/${r}/${today}/${cid}/` });
-  if (done.blobs.length) return json({ ok: false, already: true, ...(await snapshot(store, round, cid)) });
-  await store.set(`k/${r}/${today}/${cid}/${encodeURIComponent(target)}`, new Date().toISOString());
+  const before = await snapshot(store, round, cid);
+  if (before.me.today) return json({ ok: false, already: true, ...before });
+  await store.set(`k/${hex(round)}/${before.day}/${cid}/${target.replace(":", "_")}`, new Date().toISOString());
   return json({ ok: true, ...(await snapshot(store, round, cid)) });
 };
 

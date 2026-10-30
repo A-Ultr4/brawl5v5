@@ -1200,6 +1200,25 @@ html.fx-on .vs-go:not(:disabled){animation:goPulse 1.3s ease-in-out infinite}
 .arc-old small{font-size:.78rem;color:var(--mute)}
 .arc-old .arc-sc{font-size:1.3rem}
 @media (max-width:560px){.pd-pick{grid-template-columns:1fr 1fr}.pd-vs{display:none}.la-row{grid-template-columns:1fr auto}.la-bt{grid-column:1/-1;justify-content:flex-start}.gr-team .k{margin-left:0}}
+
+/* ---------- result card + calendar ---------- */
+.card-btn{align-self:flex-start}
+.cardm{position:relative;width:min(560px,100%);max-height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--panel-2),var(--deep) 55%);border:1px solid var(--gold);clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px));box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.cardm .pm-top{--team:var(--gold);--team-hi:var(--gold)}
+.cardm-b{flex:1;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cardm-b img{display:block;width:100%;max-width:420px;height:auto;border:1px solid var(--line-hi);box-shadow:0 10px 40px rgba(0,0,0,.5);-webkit-touch-callout:default}
+.cal{position:relative}
+.cal>summary{list-style:none;cursor:pointer;padding:7px 14px;background:var(--panel);border:1px solid var(--line-hi);font-weight:700;font-size:.85rem;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.cal>summary::-webkit-details-marker{display:none}
+.cal[open]>summary{border-color:var(--gold);color:var(--gold)}
+.cal-m{position:absolute;z-index:5;top:calc(100% + 6px);left:0;display:flex;flex-direction:column;gap:6px;padding:10px;background:var(--deep);border:1px solid var(--line-hi);box-shadow:0 12px 40px rgba(0,0,0,.5);min-width:240px}
+.cal-m a{text-decoration:none;color:var(--ink);padding:9px 12px}
+.lv-ann small{font-size:.85rem;color:var(--dim)}
+.la-auto{flex-direction:row;flex-wrap:wrap;padding:10px;border:1px dashed var(--line-hi)}
+.la-auto .help{flex-basis:100%}
+.la-log{flex-basis:100%;font-size:.8rem;color:var(--ok)}
+.la-log.err{color:var(--red-hi)}
+.la-log small{color:var(--mute)}
 </style>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div id="root"></div>
@@ -1332,7 +1351,7 @@ function heroHTML(s) {
     '<p class="eyebrow">' + esc(m.eyebrow) + '</p>' +
     '<h1 class="title" data-text="' + esc(m.title) + '">' + esc(m.title) + '</h1>' +
     (m.tagline ? '<p class="tagline">' + esc(m.tagline) + '</p>' : '') +
-    '<div class="when">' + whenHTML(m) + (SHOW_STATS ? '<span class="live-now" aria-live="polite"><i></i>いま <b class="num" data-now="1">' + (VIS && VIS.now != null ? VIS.now : '–') + '</b> 人が見ています</span>' : '') + '</div>' +
+    '<div class="when">' + whenHTML(m) + calHTML(s) + (SHOW_STATS ? '<span class="live-now" aria-live="polite"><i></i>いま <b class="num" data-now="1">' + (VIS && VIS.now != null ? VIS.now : '–') + '</b> 人が見ています</span>' : '') + '</div>' +
     '<div class="vs">' + sideHTML(s, 'blue', t.b) + emblemHTML() + sideHTML(s, 'red', t.r) + '</div>' +
     heroTugHTML(s, t) + forecastHTML(m) +
     (notice ? '<div class="notice"><span class="lbl">NOTICE</span><p>' + nl2br(notice) + '</p>' + (m.place && !parseDate(m.date) ? '<p class="place">開催方法：' + esc(m.place) + '</p>' : '') + '</div>' : '') +
@@ -1614,7 +1633,8 @@ function scoresHTML(s) {
     '<div class="tally"><div class="tb b"><span>BLUE</span><small>' + esc(s.teams.blue.name) + '</small></div>' +
     '<div class="big"><span style="color:var(--blue-hi)">' + t.b + '</span><i>:</i><span style="color:var(--red-hi)">' + t.r + '</span></div>' +
     '<div class="tb r"><span>RED</span><small>' + esc(s.teams.red.name) + '</small></div><p class="lab">TOTAL WINS ／ 通算の勝利数' + curSplit(s) + '</p></div>' +
-    (rows ? '<div class="matches">' + rows + '</div>' : '<p class="empty">試合結果はまだありません</p>') + tourTableHTML(s) + '</div></section>';
+    (rows ? '<div class="matches">' + rows + '</div>' : '<p class="empty">試合結果はまだありません</p>') + tourTableHTML(s) +
+    ((s.matches || []).some(function (m) { return m.winner; }) ? '<div class="vs-act" style="margin-top:14px"><button type="button" class="btn ghost card-btn" data-card="cur">🖼 今大会の結果カードを作る</button></div>' : '') + '</div></section>';
 }
 
 function faqHTML(s) {
@@ -3342,6 +3362,7 @@ function archiveHTML(s) {
   var pb = isNum(s.meta.pastBlue) ? Number(s.meta.pastBlue) : 0, pr = isNum(s.meta.pastRed) ? Number(s.meta.pastRed) : 0;
   if (!as.length) return '';
   var items = as.map(function (a, ai) {
+    var oi = archives(s).length - 1 - ai;
     var w = arcWins(a), mv = arcMvp(a), d = parseDate(a.date);
     var res = w.b === w.r ? '<em class="draw">引き分け</em>' : '<em class="' + (w.b > w.r ? 'blue' : 'red') + '">' + (w.b > w.r ? 'BLUE' : 'RED') + ' の勝ち</em>';
     var T = tourOnlyFrom(a.matches);
@@ -3358,7 +3379,7 @@ function archiveHTML(s) {
     }).join('') + '</tbody></table></div>' : '';
     return '<details class="arc"' + (ai === 0 ? ' open' : '') + '><summary><span class="arc-t1"><b>' + esc(a.title || '過去の大会') + '</b><small>' + (d ? esc(fmtDate(d)) : '') + '</small></span>' +
       '<span class="arc-sc num"><span class="b">' + w.b + '</span><i>-</i><span class="r">' + w.r + '</span></span>' + res + '<span class="fc-ar" aria-hidden="true">▾</span></summary>' +
-      '<div class="arc-body">' + (mv ? '<p class="arc-mvp">👑 MVP（大会スコア1位）<b>' + esc(snapName(s, a, mv.tag)) + '</b><span class="num">' + mv.pts + '点</span></p>' : '') +
+      '<div class="arc-body"><button type="button" class="btn ghost card-btn" data-card="' + oi + '">🖼 結果カードを作る</button>' + (mv ? '<p class="arc-mvp">👑 MVP（大会スコア1位）<b>' + esc(snapName(s, a, mv.tag)) + '</b><span class="num">' + mv.pts + '点</span></p>' : '') +
       '<ol class="arc-ms">' + ms + '</ol>' + tbl + '</div></details>';
   }).join('');
   var older = (pb || pr) ? '<div class="arc-old"><b>' + esc(shortTitle((as[as.length - 1] || {}).title)) + 'より前の大会</b><span class="arc-sc num"><span class="b">' + pb + '</span><i>-</i><span class="r">' + pr + '</span></span><small>試合ごとのくわしい記録はありません</small></div>' : '';
@@ -3526,6 +3547,8 @@ function applyLive(s) {
     var m = ms[n - 1], w = R[n];
     if (!m) m = { label: '第' + n + '戦', map: '', mod: '', status: 'next', blue: '', red: '', winner: '', note: '' };
     if ((w === 'blue' || w === 'red') && !m.winner) m = Object.assign({}, m, { winner: w, status: 'done' });
+    var dt = LV.details && LV.details[n];
+    if (dt && m.winner) m = Object.assign({}, m, { map: m.map || dt.map || '', note: m.note || (dt.star && dt.star.name ? '★ ' + dt.star.name + (dt.star.brawler ? '（' + dt.star.brawler + '）' : '') : '') });
     if (LV.cur === n && !m.winner) m = Object.assign({}, m, { status: 'live' });
     ms[n - 1] = m;
   }
@@ -3546,7 +3569,9 @@ function liveBarHTML() {
 }
 function liveAnnounce(n, w) {
   var el = document.createElement('div'); el.className = 'lv-ann ' + w; el.setAttribute('role', 'status');
-  el.innerHTML = '<em>速報</em><b>' + esc(matchLabel(n)) + '</b><strong>' + w.toUpperCase() + ' 勝利！</strong>';
+  var dt = LV && LV.details && LV.details[n];
+  el.innerHTML = '<em>速報</em><b>' + esc(matchLabel(n)) + '</b><strong>' + w.toUpperCase() + ' 勝利！</strong>' +
+    (dt && (dt.map || dt.star) ? '<small>' + [dt.map ? 'マップ：' + esc(dt.map) : '', dt.star && dt.star.name ? '★ スタープレイヤー ' + esc(dt.star.name) : ''].filter(Boolean).join(' ・ ') + '</small>' : '');
   document.body.appendChild(el);
   var a = fxA(el, [{ transform: 'translate(-50%,-50%) scale(.3) rotate(-8deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.12) rotate(2deg)', opacity: 1, offset: .12 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .2 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .85 }, { transform: 'translate(-50%,-50%) scale(.9)', opacity: 0 }], { duration: 3200, fill: 'forwards' });
   if (a) a.onfinish = function () { el.remove(); }; else setTimeout(function () { el.remove(); }, 3200);
@@ -3663,7 +3688,11 @@ function liveAdminHTML() {
       '<span class="la-bt"><button type="button" class="mini" data-la="cur" data-n="' + n + '"' + (cur || w ? ' disabled' : '') + '>試合中</button><button type="button" class="mini b" data-la="win" data-w="blue" data-n="' + n + '">BLUE勝ち</button><button type="button" class="mini r" data-la="win" data-w="red" data-n="' + n + '">RED勝ち</button>' + (w || cur ? '<button type="button" class="mini danger" data-la="undo" data-n="' + n + '">取り消し</button>' : '') + '</span></div>';
   }
   var mv = ['off', 'open', 'closed'].map(function (m, i) { return '<button type="button" class="mini' + (LV.mvp === m ? ' on' : '') + '" data-la="mvp" data-m="' + m + '">' + ['なし', '受付中', '結果発表'][i] + '</button>'; }).join('');
-  return '<div class="la-sec"><b>ライブ速報</b><button type="button" class="btn ' + (LV.on ? 'ghost' : '') + '" data-la="on">' + (LV.on ? 'LIVEを終わる' : 'LIVEを始める') + '</button></div>' +
+  var L = LV.autoLog, tm = function (iso) { var d = parseDate(iso); return d ? pad(d.getHours()) + ':' + pad(d.getMinutes()) : ''; };
+  var auto = '<div class="la-sec la-auto"><b>結果の自動入力</b><button type="button" class="mini' + (LV.auto ? ' on' : '') + '" data-la="auto">' + (LV.auto ? 'ON' : 'OFF') + '</button>' + (LV.auto ? '<button type="button" class="mini" data-la="autonow">今すぐチェック</button>' : '') +
+    '<p class="help">ONにすると、LIVE中は約1分ごとに公式のバトルログを見て、BLUEとREDのメンバーがそろったフレンドバトルの勝敗を自動で入れます（マップ・スタープレイヤーも）。まちがっていたら「取り消し」で直せます。撃破やダメージは公式データにないので、成績はこれまでどおり結果画面から入れます。</p>' +
+    (L ? '<p class="la-log ' + (L.ok ? '' : 'err') + '">' + (L.ok ? '最終チェック ' + tm(L.at) + ' ・ 見つかった試合 ' + L.found + ' ・ 追加 ' + L.added + (L.recent && L.recent.length ? '<br><small>最近のバトル：' + esc(L.recent.join('、 ')) + '</small>' : '') : '自動チェックでエラー：' + esc(L.error || '')) + '</p>' : '') + '</div>';
+  return '<div class="la-sec"><b>ライブ速報</b><button type="button" class="btn ' + (LV.on ? 'ghost' : '') + '" data-la="on">' + (LV.on ? 'LIVEを終わる' : 'LIVEを始める') + '</button></div>' + auto +
     '<form class="la-sec" data-la-head="1"><input type="text" maxlength="80" placeholder="速報メッセージ（例：第2戦はスーパーチャージあり）" value="' + esc(LV.head || '') + '"><button type="submit" class="mini add">送る</button></form>' +
     '<p class="help">試合が始まったら「試合中」（予想がしめきられます）、終わったら勝ったチームを押してください。すぐ公開ページに出ます。</p><div class="la-rows">' + rows + '</div>' +
     '<div class="la-sec"><b>MVP投票</b><span class="la-mv">' + mv + '</span></div>' +
@@ -3693,6 +3722,8 @@ document.addEventListener('click', function (e) {
   if (a === 'cur') return laSend({ cur: n }, matchLabel(n) + 'を試合中にしました');
   if (a === 'win') return laSend({ result: { n: n, winner: t.dataset.w } }, matchLabel(n) + ' ' + t.dataset.w.toUpperCase() + '勝ちを送りました');
   if (a === 'undo') return laSend(LV.results && LV.results[n] ? { result: { n: n, winner: null } } : { cur: null }, '取り消しました');
+  if (a === 'auto') return laSend({ auto: !LV.auto }, LV.auto ? '自動入力をOFFにしました' : '自動入力をONにしました（LIVE中のみ動きます）');
+  if (a === 'autonow') return laSend({ autoNow: true }, 'チェックを予約しました（次の読み込みで確認）');
   if (a === 'mvp') return laSend({ mvp: t.dataset.m }, 'MVP投票：' + { off: 'なし', open: '受付中', closed: '結果発表' }[t.dataset.m]);
 });
 document.addEventListener('submit', function (e) {
@@ -3716,6 +3747,189 @@ root.addEventListener('click', function (e) {
   var tg = t.closest('[data-rou-tg]'); if (tg) { var nm = tg.dataset.rouTg, i = ROU.off.indexOf(nm); if (i >= 0) ROU.off.splice(i, 1); else ROU.off.push(nm); rouRefresh(); return; }
   if (t.closest('[data-rou-clear]')) { ROU.extra = []; rouRefresh(); return; }
   if (t.closest('[data-rou-go]')) return rouSpin();
+});
+
+/* ===== result card image (結果カード) ===== */
+var CARD_W = 1080, CARD_H = 1350;
+function cardSpec(s, src) {
+  var a = src === 'cur' ? null : archives(s)[Number(src)];
+  var ms = a ? a.matches : (s.matches || []);
+  var w = a ? arcWins(a) : (function () { var b = 0, r = 0; ms.forEach(function (m) { if (m.winner === 'blue') b++; else if (m.winner === 'red') r++; }); return { b: b, r: r }; })();
+  var T = tourOnlyFrom(ms), rows = Object.keys(T.by).map(function (k) { return { tag: k, x: T.by[k] }; }).sort(function (p, q) { return q.x.raw - p.x.raw; });
+  var who = function (tag) {
+    var h = playerByTag(s, tag);
+    return { name: a ? snapName(s, a, tag) : (h ? h.p.name : tag), img: h ? safeImg(h.p.img) : '', k: h ? h.k : (((a && a.players) || []).filter(function (p) { return tagKey(p.tag) === tag; })[0] || {}).k || 'blue' };
+  };
+  var mvp = null;
+  if (!a && LV && LV.mvp === 'closed' && LV.mvpVotes) {
+    var best = null; Object.keys(LV.mvpVotes).forEach(function (t) { if (!best || LV.mvpVotes[t] > LV.mvpVotes[best]) best = t; });
+    if (best) mvp = { p: who(best), how: 'みんなの投票で決定', o: T.by[best] ? T.by[best].o : null, pts: T.by[best] ? T.by[best].pts : null, votes: LV.mvpVotes[best] };
+  }
+  if (!mvp && rows.length) mvp = { p: who(rows[0].tag), how: '大会スコア1位', o: rows[0].x.o, pts: rows[0].x.pts };
+  var t = tallies(s);
+  if (a) {
+    t = { b: isNum(s.meta.pastBlue) ? Number(s.meta.pastBlue) : 0, r: isNum(s.meta.pastRed) ? Number(s.meta.pastRed) : 0 };
+    archives(s).slice(0, Number(src) + 1).forEach(function (x) { var ww = arcWins(x); t.b += ww.b; t.r += ww.r; });
+  }
+  return {
+    title: a ? (a.title || '過去の大会') : s.meta.title, date: parseDate(a ? a.date : s.meta.date), b: w.b, r: w.r,
+    results: ms.filter(function (m) { return m.winner === 'blue' || m.winner === 'red'; }).map(function (m) { return m.winner; }),
+    mvp: mvp, top: rows.slice(0, 3).map(function (r) { return { p: who(r.tag), pts: r.x.pts, o: r.x.o }; }), total: t
+  };
+}
+function loadImg(src) { return new Promise(function (res) { if (!src) return res(null); var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; }); }
+function drawCard(spec) {
+  var cv = document.createElement('canvas'); cv.width = CARD_W; cv.height = CARD_H;
+  var c = cv.getContext('2d');
+  var F = { d: '"Dela Gothic One","Hiragino Sans","Noto Sans CJK JP",sans-serif', h: 'Oxanium,"Avenir Next Condensed",sans-serif', b: '"Zen Kaku Gothic New","Hiragino Sans","Noto Sans CJK JP",sans-serif' };
+  var txt = [spec.title, spec.mvp ? spec.mvp.p.name + spec.mvp.how : '', spec.top.map(function (x) { return x.p.name; }).join(''), '通算勝ちBLUERED引き分け大会スコア撃破点票ドローの決定位'].join('');
+  var fonts = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('400 64px "Dela Gothic One"', txt), document.fonts.load('800 100px Oxanium', '0123456789BLUEREDWINVS'), document.fonts.load('600 30px Oxanium', 'MVPTOP'), document.fonts.load('700 30px "Zen Kaku Gothic New"', txt), document.fonts.load('500 30px "Zen Kaku Gothic New"', txt)]).catch(function () {}) : Promise.resolve();
+  var imgs = [spec.mvp ? spec.mvp.p.img : ''].concat(spec.top.map(function (x) { return x.p.img; }));
+  return Promise.all([fonts].concat(imgs.map(loadImg))).then(function (got) {
+    var I = got.slice(1);
+    var BL = '#2f9bff', BH = '#9ad6ff', RD = '#ff3a5e', RH = '#ffa3b3', GD = '#ffcf3f', INK = '#eef2ff', DIM = '#a3add9', MUTE = '#6c78ad';
+    var poly = function (pts) { c.beginPath(); pts.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); }); c.closePath(); };
+    var fit = function (t, font, max) { c.font = font; var s = t; while (c.measureText(s).width > max && s.length > 1) s = s.slice(0, -1); return s === t ? t : s.slice(0, -1) + '…'; };
+    var avatar = function (im, x, y, r, ring, name) {
+      c.save(); c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.closePath(); c.fillStyle = '#16205a'; c.fill(); c.clip();
+      if (im) { var k = Math.max(2 * r / im.width, 2 * r / im.height); c.drawImage(im, x - im.width * k / 2, y - im.height * k / 2, im.width * k, im.height * k); }
+      else { c.fillStyle = ring; c.font = '400 ' + Math.round(r) + 'px ' + F.d; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(Array.from(name || '?')[0], x, y + 2); }
+      c.restore(); c.lineWidth = Math.max(4, r / 12); c.strokeStyle = ring; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.stroke();
+    };
+    // background
+    c.fillStyle = '#050817'; c.fillRect(0, 0, CARD_W, CARD_H);
+    var g = c.createRadialGradient(140, 380, 0, 140, 380, 700); g.addColorStop(0, 'rgba(47,155,255,.38)'); g.addColorStop(1, 'rgba(47,155,255,0)'); c.fillStyle = g; c.fillRect(0, 0, CARD_W, CARD_H);
+    g = c.createRadialGradient(940, 420, 0, 940, 420, 700); g.addColorStop(0, 'rgba(255,58,94,.36)'); g.addColorStop(1, 'rgba(255,58,94,0)'); c.fillStyle = g; c.fillRect(0, 0, CARD_W, CARD_H);
+    c.strokeStyle = 'rgba(74,95,196,.16)'; c.lineWidth = 1;
+    for (var gx = 0; gx <= CARD_W; gx += 54) { c.beginPath(); c.moveTo(gx, 0); c.lineTo(gx, CARD_H); c.stroke(); }
+    for (var gy = 0; gy <= CARD_H; gy += 54) { c.beginPath(); c.moveTo(0, gy); c.lineTo(CARD_W, gy); c.stroke(); }
+    // frame
+    c.strokeStyle = 'rgba(255,207,63,.75)'; c.lineWidth = 4; poly([[24, 24], [CARD_W - 64, 24], [CARD_W - 24, 64], [CARD_W - 24, CARD_H - 24], [64, CARD_H - 24], [24, CARD_H - 64]]); c.stroke();
+    // header
+    c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    c.fillStyle = GD; c.font = '600 26px ' + F.h; c.fillText('BRAWL STARS  ・  5v5 KNOCKOUT  ・  RESULT'.split('').join(String.fromCharCode(8202)), 72, 108);
+    c.fillStyle = INK; c.font = fit(spec.title, '400 66px ' + F.d, 940) === spec.title ? '400 66px ' + F.d : '400 54px ' + F.d;
+    c.shadowColor = 'rgba(47,155,255,.6)'; c.shadowBlur = 24; c.fillText(fit(spec.title, c.font, 940), 72, 190); c.shadowBlur = 0;
+    if (spec.date) { c.fillStyle = DIM; c.font = '500 28px ' + F.b; c.fillText(fmtDate(spec.date), 74, 238); }
+    // score panels
+    var top = 280, h = 290;
+    g = c.createLinearGradient(40, top, 560, top + h); g.addColorStop(0, 'rgba(47,155,255,.55)'); g.addColorStop(1, 'rgba(10,16,48,.9)');
+    c.fillStyle = g; poly([[40, top], [575, top], [520, top + h], [40, top + h]]); c.fill();
+    g = c.createLinearGradient(1040, top, 520, top + h); g.addColorStop(0, 'rgba(255,58,94,.55)'); g.addColorStop(1, 'rgba(10,16,48,.9)');
+    c.fillStyle = g; poly([[560, top], [1040, top], [1040, top + h], [505, top + h]]); c.fill();
+    c.font = '800 46px ' + F.h; c.fillStyle = BH; c.textAlign = 'left'; c.fillText('BLUE', 76, top + 66);
+    c.fillStyle = RH; c.textAlign = 'right'; c.fillText('RED', 1004, top + 66);
+    c.font = '800 190px ' + F.h; c.fillStyle = '#fff';
+    c.shadowColor = BL; c.shadowBlur = 30; c.textAlign = 'left'; c.fillText(String(spec.b), 70, top + 248);
+    c.shadowColor = RD; c.textAlign = 'right'; c.fillText(String(spec.r), 1010, top + 248); c.shadowBlur = 0;
+    // VS emblem
+    c.save(); c.translate(540, top + h / 2);
+    c.fillStyle = '#050817'; c.beginPath(); c.arc(0, 0, 74, 0, Math.PI * 2); c.fill();
+    var rg = c.createLinearGradient(-74, 0, 74, 0); rg.addColorStop(0, BL); rg.addColorStop(1, RD);
+    c.lineWidth = 6; c.strokeStyle = rg; c.beginPath(); c.arc(0, 0, 66, 0, Math.PI * 2); c.stroke();
+    c.setLineDash([10, 12]); c.lineWidth = 3; c.strokeStyle = GD; c.beginPath(); c.arc(0, 0, 82, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+    c.font = 'italic 800 58px ' + F.h; c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('VS', 0, 4);
+    c.restore();
+    // stamp
+    var win = spec.b === spec.r ? 'DRAW' : spec.b > spec.r ? 'BLUE WIN' : 'RED WIN', sc = spec.b === spec.r ? GD : spec.b > spec.r ? BL : RD;
+    c.save(); c.translate(540, top + h + 8); c.rotate(-0.06);
+    c.font = 'italic 800 54px ' + F.h; var sw = c.measureText(win).width + 70;
+    c.fillStyle = sc; poly([[-sw / 2 + 16, -38], [sw / 2 + 16, -38], [sw / 2 - 16, 38], [-sw / 2 - 16, 38]]); c.fill();
+    c.fillStyle = spec.b === spec.r ? '#1b1400' : '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(win, 0, 3);
+    c.restore();
+    // match dots
+    c.textBaseline = 'alphabetic';
+    var dots = spec.results.slice(0, 15), dx = 540 - (dots.length * 36) / 2 + 18;
+    dots.forEach(function (w, i) { c.fillStyle = w === 'blue' ? BL : RD; c.beginPath(); c.arc(dx + i * 36, top + h + 82, 12, 0, Math.PI * 2); c.fill(); });
+    // MVP
+    var my = 720;
+    if (spec.mvp) {
+      g = c.createLinearGradient(40, my, 1040, my + 300); g.addColorStop(0, 'rgba(255,207,63,.20)'); g.addColorStop(1, 'rgba(14,22,64,.92)');
+      c.fillStyle = g; poly([[40, my], [1010, my], [1040, my + 30], [1040, my + 300], [70, my + 300], [40, my + 270]]); c.fill();
+      c.strokeStyle = GD; c.lineWidth = 3; c.stroke();
+      avatar(I[0], 200, my + 150, 112, GD, spec.mvp.p.name);
+      // crown
+      c.fillStyle = GD; c.save(); c.translate(200, my + 22); poly([[-48, 26], [-56, -16], [-24, 6], [0, -30], [24, 6], [56, -16], [48, 26]]); c.fill(); c.restore();
+      c.textAlign = 'left';
+      c.fillStyle = GD; c.font = '800 44px ' + F.h; c.fillText('MVP', 350, my + 82);
+      c.fillStyle = DIM; c.font = '700 26px ' + F.b; c.fillText(spec.mvp.how, 460, my + 80);
+      c.fillStyle = '#fff'; c.font = '400 64px ' + F.d; c.fillText(fit(spec.mvp.p.name, '400 64px ' + F.d, 650), 350, my + 166);
+      var o = spec.mvp.o, line = [];
+      if (spec.mvp.votes) line.push(spec.mvp.votes + '票');
+      if (spec.mvp.pts != null) line.push('大会スコア ' + spec.mvp.pts + '点');
+      if (o) { line.push(o.k + '撃破'); line.push('K/D ' + kdText(o)); }
+      c.fillStyle = INK; c.font = '700 30px ' + F.b; c.fillText(fit(line.join('  ・  '), '700 30px ' + F.b, 650), 350, my + 226);
+      if (o) { c.fillStyle = DIM; c.font = '500 26px ' + F.b; c.fillText(fit('与えたダメージ ' + fmt(o.dmg) + (o.star ? '  ・  スタープレイヤー ' + o.star + '回' : ''), '500 26px ' + F.b, 650), 350, my + 268); }
+    }
+    // top 3
+    var ty = 1062;
+    if (spec.top.length > 1) {
+      c.fillStyle = MUTE; c.font = '600 24px ' + F.h; c.textAlign = 'left'; c.fillText('TOP 3  ・  大会スコア', 56, ty - 14);
+      var medal = [GD, '#cfd8ea', '#d58a4a'];
+      spec.top.forEach(function (t, i) {
+        var x = 40 + i * 340, y = ty;
+        c.fillStyle = 'rgba(14,22,64,.92)'; c.fillRect(x, y, 320, 128);
+        c.fillStyle = t.p.k === 'red' ? RD : BL; c.fillRect(x, y, 6, 128);
+        c.fillStyle = medal[i]; c.beginPath(); c.arc(x + 46, y + 40, 22, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#1b1400'; c.font = '800 28px ' + F.h; c.textAlign = 'center'; c.fillText(String(i + 1), x + 46, y + 50);
+        avatar(I[i + 1], x + 46, y + 96, 24, t.p.k === 'red' ? RD : BL, t.p.name);
+        c.textAlign = 'left'; c.fillStyle = '#fff'; c.font = '700 30px ' + F.b; c.fillText(fit(t.p.name, '700 30px ' + F.b, 220), x + 86, y + 52);
+        c.fillStyle = GD; c.font = '800 46px ' + F.h; c.fillText(String(t.pts), x + 86, y + 108);
+        var pw = c.measureText(String(t.pts)).width;
+        c.fillStyle = DIM; c.font = '500 22px ' + F.b; c.fillText('点 ・ K/D ' + kdText(t.o), x + 92 + pw, y + 106);
+      });
+    }
+    // footer
+    c.textAlign = 'left'; c.fillStyle = DIM; c.font = '700 28px ' + F.b; c.fillText(spec.title === view.meta.title ? '通算' : 'この時点の通算', 56, 1222);
+    c.font = '800 44px ' + F.h; c.fillStyle = BH; c.fillText('BLUE ' + spec.total.b, 56, 1278);
+    var bw = c.measureText('BLUE ' + spec.total.b).width;
+    c.fillStyle = MUTE; c.fillText(' - ', 56 + bw, 1278); var dw = c.measureText(' - ').width;
+    c.fillStyle = RH; c.fillText(spec.total.r + ' RED', 56 + bw + dw, 1278);
+    c.textAlign = 'left'; c.font = '800 34px ' + F.h; var w1 = c.measureText('BRAWL ').width, w2 = c.measureText('5v5').width;
+    c.fillStyle = '#fff'; c.fillText('BRAWL ', 1024 - w1 - w2, 1266); c.fillStyle = GD; c.fillText('5v5', 1024 - w2, 1266); c.textAlign = 'right';
+    c.fillStyle = MUTE; c.font = '500 20px ' + F.h; c.fillText(location.host || 'brawl 5v5', 1024, 1300);
+    return cv;
+  });
+}
+var CARD_URL = null;
+function openCard(src) {
+  var spec = cardSpec(view, src);
+  var wrap = document.createElement('div'); wrap.className = 'pm-wrap card-wrap';
+  wrap.innerHTML = '<div class="pm-back" data-card-x="1"></div><div class="cardm" role="dialog" aria-label="結果カード"><div class="pm-top"><span class="code">RESULT CARD</span><span class="pm-file">画像にしてLINEなどで送れます</span><button type="button" class="pm-x" data-card-x="1" aria-label="閉じる">✕</button></div><div class="cardm-b"><p class="empty">カードを作っています…</p></div></div>';
+  document.body.appendChild(wrap); document.documentElement.classList.add('locked');
+  drawCard(spec).then(function (cv) {
+    var b = wrap.querySelector('.cardm-b'); if (!b) return;
+    cv.toBlob(function (blob) {
+      if (CARD_URL) URL.revokeObjectURL(CARD_URL);
+      CARD_URL = URL.createObjectURL(blob);
+      var file = null; try { file = new File([blob], 'brawl5v5-result.png', { type: 'image/png' }); } catch (e) {}
+      var canShare = file && navigator.canShare && navigator.canShare({ files: [file] });
+      b.innerHTML = '<img src="' + CARD_URL + '" alt="' + esc(spec.title) + 'の結果カード">' +
+        '<div class="vs-act">' + (canShare ? '<button type="button" class="btn vs-go" data-card-share="1">📤 共有・保存</button>' : '') + '<a class="btn ghost" href="' + CARD_URL + '" download="brawl5v5-result.png">⬇ 画像を保存</a></div><p class="fc-note">iPhone・iPadは、画像を長押ししても保存できます。</p>';
+      var sh = b.querySelector('[data-card-share]');
+      if (sh) sh.addEventListener('click', function () { navigator.share({ files: [file], title: spec.title }).catch(function () {}); });
+      if (FX) { var im = b.querySelector('img'); fxA(im, [{ transform: 'scale(.6) rotate(-6deg)', opacity: 0 }, { transform: 'scale(1.04) rotate(1deg)', opacity: 1, offset: .7 }, { transform: 'none', opacity: 1 }], { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1)' }); }
+    }, 'image/png');
+  });
+  wrap.addEventListener('click', function (e) { if (e.target.closest('[data-card-x]')) { wrap.remove(); document.documentElement.classList.remove('locked'); } });
+}
+
+/* ===== add to calendar ===== */
+function calInfo(s) {
+  var d = parseDate(s.meta.date); if (!d) return null;
+  var end = new Date(d.getTime() + 2 * 36e5);
+  (s.schedule || []).forEach(function (x) { var t = String(x.end || x.time || '').match(/^(\d{1,2}):(\d{2})$/); if (t) { var e = new Date(d); e.setHours(Number(t[1]), Number(t[2]), 0, 0); if (e > end) end = e; } });
+  return { start: d, end: end, title: s.meta.title, place: s.meta.place || '', url: location.origin + location.pathname };
+}
+function calStamp(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+function calHTML(s) {
+  if (!ONLINE) return '';
+  var c = calInfo(s); if (!c || c.end < new Date()) return '';
+  var g = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(c.title) + '&dates=' + calStamp(c.start) + '/' + calStamp(c.end) + '&details=' + encodeURIComponent('大会ページ：' + c.url) + '&location=' + encodeURIComponent(c.place);
+  return '<details class="cal"><summary>📅 カレンダーに追加</summary><div class="cal-m"><a href="/api/ics" class="mini">iPhone・iPad・Mac のカレンダー</a><a href="' + esc(g) + '" target="_blank" rel="noopener" class="mini">Google カレンダー</a></div></details>';
+}
+root.addEventListener('click', function (e) {
+  var cd = e.target.closest('[data-card]'); if (cd) { e.preventDefault(); openCard(cd.dataset.card); }
 });
 
 render();

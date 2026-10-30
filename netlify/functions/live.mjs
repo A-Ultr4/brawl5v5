@@ -26,7 +26,57 @@ async function published() {
   try { const d = await fetch(DATA_URL + "?t=" + Math.floor(Date.now() / 6e4)).then((r) => r.json()); dataCache = { at: Date.now(), d }; } catch {}
   return dataCache.d;
 }
-const blank = () => ({ on: false, results: {}, cur: null, head: "", mvp: "off", at: null });
+const blank = () => ({ on: false, results: {}, cur: null, head: "", mvp: "off", at: null, auto: false, autoSince: null, autoAt: 0, seen: [], details: {}, autoLog: null });
+
+// ---- automatic results from the official battle log (friendly battles with our players) ----
+const tagOf = (t) => String(t || "").replace(/^#/, "").toUpperCase();
+const btime = (t) => { const m = String(t || "").match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/); return m ? Date.parse(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`) : NaN; };
+async function battlelog(tag) {
+  const key = process.env.BS_API_KEY;
+  if (!key) throw new Error("no api key");
+  const r = await fetch("https://bsproxy.royaleapi.dev/v1/players/%23" + tag + "/battlelog", { headers: { authorization: "Bearer " + key, accept: "application/json" } });
+  if (!r.ok) throw new Error("battlelog http " + r.status);
+  const j = await r.json();
+  return Array.isArray(j.items) ? j.items : [];
+}
+async function autoCheck(st, round) {
+  const d = await published();
+  if (!d || !d.teams) throw new Error("no data");
+  const blue = new Set((d.teams.blue.members || []).map((m) => tagOf(m.tag)).filter(Boolean));
+  const red = new Set((d.teams.red.members || []).map((m) => tagOf(m.tag)).filter(Boolean));
+  const since = st.autoSince ? Date.parse(st.autoSince) : 0;
+  const found = new Map(), recent = [];
+  for (const who of [[...blue][0], [...red][0]].filter(Boolean)) {
+    const items = await battlelog(who);
+    for (const it of items.slice(0, 6)) recent.push([it.battle && it.battle.type, (it.event && it.event.mode) || (it.battle && it.battle.mode), it.battle && Array.isArray(it.battle.teams) ? it.battle.teams.map((t) => t.length).join("v") : "-"].join("/"));
+    for (const it of items) {
+      const b = it.battle || {}, t = btime(it.battleTime);
+      if (!(t >= since) || !Array.isArray(b.teams) || b.teams.length !== 2) continue;
+      const sides = b.teams.map((team) => team.map((p) => tagOf(p.tag)));
+      const ours = sides.flat().filter((x) => blue.has(x) || red.has(x)).length;
+      if (ours < 6) continue;
+      const blueSide = sides[0].filter((x) => blue.has(x)).length >= sides[1].filter((x) => blue.has(x)).length ? 0 : 1;
+      const mySide = sides[0].includes(who) ? 0 : 1;
+      if (b.result !== "victory" && b.result !== "defeat") continue;
+      const iWon = b.result === "victory";
+      const winner = (mySide === blueSide) === iWon ? "blue" : "red";
+      const star = b.starPlayer ? { tag: tagOf(b.starPlayer.tag), name: b.starPlayer.name, brawler: b.starPlayer.brawler && b.starPlayer.brawler.name } : null;
+      found.set(it.battleTime, { time: t, winner, map: (it.event && it.event.map) || "", mode: (it.event && it.event.mode) || b.mode || "", star, type: b.type || "" });
+    }
+  }
+  const res = await decided(st, round);
+  let added = 0;
+  for (const [bt, x] of [...found.entries()].sort((a, b) => a[1].time - b[1].time)) {
+    if (st.seen.includes(bt)) continue;
+    let n = 1; while (res[n] && n < MAXN) n++;
+    st.results = { ...(st.results || {}), [n]: x.winner }; res[n] = x.winner;
+    st.details = { ...(st.details || {}), [n]: { map: x.map, mode: x.mode, star: x.star, auto: true } };
+    if (st.cur === n) st.cur = null;
+    st.seen = [...st.seen, bt].slice(-60);
+    added++;
+  }
+  return { at: new Date().toISOString(), ok: true, found: found.size, added, recent: recent.slice(0, 8) };
+}
 
 async function readState(store, r) {
   let s = null;
@@ -51,6 +101,13 @@ const openMatch = (res, st) => {
 async function snapshot(store, round, cid) {
   const r = hex(round);
   const st = await readState(store, r);
+  if (st.on && st.auto && Date.now() - (st.autoAt || 0) > 60000) {
+    st.autoAt = Date.now();
+    await store.setJSON(`s/${r}`, st);
+    try { st.autoLog = await autoCheck(st, round); } catch (e) { st.autoLog = { at: new Date().toISOString(), ok: false, error: String((e && e.message) || e).slice(0, 120) }; }
+    if (st.autoLog.added) st.at = new Date().toISOString();
+    await store.setJSON(`s/${r}`, st);
+  }
   const res = await decided(st, round);
   const [pl, ml] = await Promise.all([store.list({ prefix: `p/${r}/` }), store.list({ prefix: `m/${r}/` })]);
   const votes = {}, mine = {}, people = {};
@@ -86,7 +143,7 @@ async function snapshot(store, round, cid) {
   const mi = board.findIndex((x) => x.me);
   if (mi >= 10) top.push({ ...board[mi], rank: mi + 1 });
   return {
-    on: !!st.on, cur: st.cur, head: st.head || "", mvp: st.mvp, at: st.at,
+    on: !!st.on, cur: st.cur, head: st.head || "", mvp: st.mvp, at: st.at, auto: !!st.auto, autoLog: st.autoLog || null, details: st.details || {},
     results: res, open: openMatch(res, st), votes, mine, board: top, players: board.length,
     mvpVotes: mvp, myMvp,
   };
@@ -115,12 +172,14 @@ export default async (req) => {
     if (typeof b.on === "boolean") st.on = b.on;
     if (typeof b.head === "string") st.head = b.head.slice(0, 80);
     if (b.mvp === "off" || b.mvp === "open" || b.mvp === "closed") st.mvp = b.mvp;
+    if (typeof b.auto === "boolean") { st.auto = b.auto; if (b.auto) { st.autoSince = new Date(Date.now() - 10 * 60000).toISOString(); st.autoAt = 0; } }
+    if (b.autoNow) st.autoAt = 0;
     if ("cur" in b) { const n = Number(b.cur); st.cur = n >= 1 && n <= MAXN ? n : null; }
     if (b.result && typeof b.result === "object") {
       const n = Number(b.result.n), w = b.result.winner;
       if (n >= 1 && n <= MAXN) {
         st.results = { ...(st.results || {}) };
-        if (w === "blue" || w === "red") { st.results[n] = w; if (st.cur === n) st.cur = null; } else delete st.results[n];
+        if (w === "blue" || w === "red") { st.results[n] = w; if (st.cur === n) st.cur = null; } else { delete st.results[n]; if (st.details) { st.details = { ...st.details }; delete st.details[n]; } }
       }
     }
     st.at = new Date().toISOString();

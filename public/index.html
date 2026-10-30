@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>\n
 <title>第三回ブロスタ5v5大会</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -822,6 +822,33 @@ html.locked,html.locked body{overflow:hidden}
   .ticker .run span[aria-hidden]{display:none}
   .title::before,.title::after{display:none}
 }
+
+/* tournament-only ranking (players section) */
+.trk{margin-top:14px;margin-bottom:22px;border-color:color-mix(in srgb,var(--gold) 50%,var(--line));background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 9%,var(--panel)),var(--panel) 60%)}
+.trk .fc-ic,.trk .fc-ar{color:var(--gold)}
+.trk .fc-ic svg{width:24px;height:24px}
+.trk-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.trk-r{display:grid;grid-template-columns:44px 40px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;background:color-mix(in srgb,var(--void) 65%,transparent);border:1px solid var(--line);border-left:3px solid var(--tc);cursor:pointer;transition:background .2s,transform .2s;animation:trkIn .5s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i) * 60ms)}
+.trk-r.blue{--tc:var(--blue);--th:var(--blue-hi)}
+.trk-r.red{--tc:var(--red);--th:var(--red-hi)}
+.trk-r:hover{background:color-mix(in srgb,var(--panel-2) 85%,transparent);transform:translateX(3px)}
+@keyframes trkIn{from{opacity:0;transform:translateY(8px)}}
+.trk-r.top1{border-color:color-mix(in srgb,var(--gold) 60%,var(--line));border-left-color:var(--tc);box-shadow:0 0 18px color-mix(in srgb,var(--gold) 14%,transparent)}
+.trk-pl{font-weight:800;font-size:1rem;color:var(--mute);text-align:center}
+.trk-pl i{font-style:normal;font-size:1.5rem;line-height:1}
+.trk-av{width:40px;height:40px;border-radius:50%;background:var(--panel-2) center/cover;border:2px solid var(--tc);display:grid;place-items:center;font-weight:700;color:var(--th)}
+.trk-m{min-width:0;display:flex;flex-direction:column;gap:2px}
+.trk-m b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trk-m small{font-size:.74rem;color:var(--dim);line-height:1.45}
+.trk-m small em{font-style:normal;color:var(--gold);font-weight:700}
+.trk-bar{display:block;height:4px;background:var(--line);overflow:hidden;margin-top:2px}
+.trk-bar i{display:block;height:100%;width:var(--w);background:linear-gradient(90deg,var(--tc),var(--th));transform-origin:left;animation:grow .9s .2s cubic-bezier(.2,.9,.2,1) both}
+.trk-s{text-align:right;line-height:1}
+.trk-s b{font-weight:800;font-size:1.5rem;color:var(--paper)}
+.trk-r.top1 .trk-s b{color:var(--gold)}
+.trk-s small{font-size:.7rem;color:var(--mute);margin-left:2px}
+@media (max-width:560px){.trk-r{grid-template-columns:34px 34px minmax(0,1fr) auto;gap:8px;padding:8px 10px}.trk-av{width:34px;height:34px}.trk-s b{font-size:1.25rem}}
+@media (prefers-reduced-motion:reduce){.trk-r,.trk-bar i{animation:none}}
 </style>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div id="root"></div>
@@ -894,7 +921,7 @@ function tallies(s) { var b = isNum(s.meta.pastBlue) ? Number(s.meta.pastBlue) :
 function headerHTML(s) {
   return '<header class="top"><div class="wrap">' +
     '<button class="brand" type="button" data-go="top" aria-label="ページの先頭へ">' + ICON.brand + '<b>BRAWL <i>5v5</i></b></button>' +
-    '<nav class="nav" aria-label="セクション">' + NAV.map(function (n) { return '<button type="button" data-go="' + n[0] + '">' + n[1] + '</button>'; }).join('') + '</nav>' +
+    '<nav class="nav" aria-label="セクション">' + NAV.filter(function (n) { return n[0] !== 'access' || SHOW_STATS; }).map(function (n) { return '<button type="button" data-go="' + n[0] + '">' + n[1] + '</button>'; }).join('') + '</nav>' +
     '</div></header>';
 }
 
@@ -950,7 +977,7 @@ function heroHTML(s) {
     '<p class="eyebrow">' + esc(m.eyebrow) + '</p>' +
     '<h1 class="title" data-text="' + esc(m.title) + '">' + esc(m.title) + '</h1>' +
     (m.tagline ? '<p class="tagline">' + esc(m.tagline) + '</p>' : '') +
-    '<div class="when">' + whenHTML(m) + (ONLINE ? '<span class="live-now" aria-live="polite"><i></i>いま <b class="num" data-now="1">' + (VIS && VIS.now != null ? VIS.now : '–') + '</b> 人が見ています</span>' : '') + '</div>' +
+    '<div class="when">' + whenHTML(m) + (SHOW_STATS ? '<span class="live-now" aria-live="polite"><i></i>いま <b class="num" data-now="1">' + (VIS && VIS.now != null ? VIS.now : '–') + '</b> 人が見ています</span>' : '') + '</div>' +
     '<div class="vs">' + sideHTML(s, 'blue', t.b) + emblemHTML() + sideHTML(s, 'red', t.r) + '</div>' +
     heroTugHTML(s, t) + forecastHTML(m) +
     (notice ? '<div class="notice"><span class="lbl">NOTICE</span><p>' + nl2br(notice) + '</p>' + (m.place && !parseDate(m.date) ? '<p class="place">開催方法：' + esc(m.place) + '</p>' : '') + '</div>' : '') +
@@ -1044,7 +1071,7 @@ function playersHTML(s) {
   var at = parseDate(s.meta.statsAt);
   var aside = n + '人がエントリー' + (at ? '<span class="sync" title="トロフィーなどは自動で更新されます"><i></i>AUTO SYNC ' + esc(fmtShort(at)) + '</span>' : '');
   return '<section class="sec" id="players"><div class="wrap">' + secH('PLAYERS', '選手紹介', aside) +
-    '<p class="tapnote">カードを押すと、選手のくわしいデータが見られます。</p>' + dataWinHTML() +
+    '<p class="tapnote">カードを押すと、選手のくわしいデータが見られます。</p>' + dataWinHTML() + tourRankHTML(s) +
     '<div class="teams">' + teamHTML(s, 'blue') + teamHTML(s, 'red') + '</div></div></section>';
 }
 
@@ -1169,6 +1196,38 @@ function tourTableHTML(s) {
   return '<div class="tour"><h3 class="tour-h">選手成績ランキング<small>' + T.games + '試合の合計 ・ 押すと選手の詳細</small></h3><div class="tour-scroll"><table class="tour-t"><thead><tr><th>順位</th><th>選手</th><th>スコア</th><th>勝-敗</th><th>撃破</th><th>デス</th><th>K/D</th><th>ダメージ</th><th>回復</th><th>スター</th><th>賞</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
     '<p class="tour-note">順位は、プロフィール（ランク・トロフィーなど）60%と、この大会の成績（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）40%を合わせたスコアの順です。</p></div>';
 }
+/* tournament-only ranking: just the box scores, no profile numbers (100-point scale) */
+function tourOnlyRank(s) {
+  var ctx = tourCtx(s); if (!ctx) return [];
+  var rows = allPlayers(s).map(function (x) {
+    var o = ctx.T.by[tagKey(x.p.tag)]; if (!o || !o.g) return null;
+    var parts = TOUR_PARTS.map(function (tp) { var w = tp.w / 4; return { label: tp.label.replace('大会：', ''), pts: Math.min(1, Math.max(0, tp.v(o, ctx.mx))) * w, max: w }; });
+    var raw = parts.reduce(function (a, q) { return a + q.pts; }, 0);
+    return { x: x, o: o, raw: raw, pts: Math.round(raw), parts: parts };
+  }).filter(Boolean);
+  rows.sort(function (a, b) { return (b.raw - a.raw) || (b.o.k - a.o.k); });
+  var place = 0, prev = null;
+  rows.forEach(function (r, i) { if (prev === null || r.pts !== prev) place = i + 1; prev = r.pts; r.place = place; });
+  return rows;
+}
+var MEDAL = ['', '🥇', '🥈', '🥉'];
+function tourRankHTML(s) {
+  var rows = tourOnlyRank(s); if (!rows.length) return '';
+  var games = tourStats(s).games;
+  var top = rows[0];
+  var list = rows.map(function (r, i) {
+    var o = r.o, src = safeImg(r.x.p.img), dh = o.dmg + o.heal;
+    return '<li class="trk-r ' + r.x.k + (r.place <= 3 ? ' top' + r.place : '') + '" data-pk="' + r.x.k + ':' + r.x.i + '" role="button" tabindex="0" style="--i:' + i + '" aria-label="' + r.place + '位 ' + esc(r.x.p.name) + ' ' + r.pts + '点。詳細を見る">' +
+      '<span class="trk-pl num">' + (MEDAL[r.place] ? '<i aria-hidden="true">' + MEDAL[r.place] + '</i>' : '#' + r.place) + '</span>' +
+      '<span class="trk-av"' + (src ? ' style="background-image:url(' + src + ')"' : '') + '>' + (src ? '' : esc(firstChar(r.x.p.name))) + '</span>' +
+      '<span class="trk-m"><b>' + esc(r.x.p.name) + '</b><small>' + o.w + '勝' + (o.g - o.w) + '敗 ・ ' + o.k + '撃破 ' + o.d + 'デス（K/D ' + kdText(o) + '）・ ' + (o.heal && !o.dmg ? '回復 ' : 'ダメ ') + fmt(dh) + (o.star ? ' ・ <em>★' + o.star + '</em>' : '') + '</small>' +
+      '<span class="trk-bar"><i style="--w:' + r.pts + '%"></i></span></span>' +
+      '<span class="trk-s num"><b>' + r.pts + '</b><small>点</small></span></li>';
+  }).join('');
+  return '<details class="fc trk"><summary><span class="fc-ic">' + ICON.trophy + '</span><span class="fc-t">大会成績だけのランキング<small>' + games + '試合の結果だけで順位づけ ・ 1位 ' + esc(top.x.p.name) + '</small></span><span class="fc-ar" aria-hidden="true">▾</span></summary>' +
+    '<div class="fc-body"><ol class="trk-l">' + list + '</ol>' +
+    '<p class="fc-note">トロフィーやランクは使わず、この大会の試合結果だけで出した100点満点のスコアです（撃破30・生存20・ダメージ＋回復30・スタープレイヤー12.5・勝率7.5）。1試合あたりの成績を、いちばん良かった選手を基準にくらべています。押すと選手の詳細が見られます。</p></div></details>';
+}
 function tourRowHTML(s, p) {
   var T = tourStats(s), o = T.by[tagKey(p.tag)];
   if (!o) return '';
@@ -1244,7 +1303,9 @@ function render() {
   var s = view;
   if (s.meta && s.meta.title) document.title = s.meta.title;
   var y = window.scrollY;
+  var openD = Array.prototype.map.call(root.querySelectorAll('details'), function (d) { return d.open; });
   root.innerHTML = headerHTML(s) + tickerHTML(s) + heroHTML(s) + scheduleHTML(s) + playersHTML(s) + cheerHTML(s) + rulesHTML(s) + mapsHTML(s) + scoresHTML(s) + faqHTML(s) + accessHTML() + ratingHTML(s) + footHTML(s);
+  root.querySelectorAll('details').forEach(function (d, i) { if (openD[i]) { d.open = true; d.querySelectorAll('.trk-r,.trk-bar i').forEach(function (el) { el.style.animation = 'none'; }); } });
   if (y) window.scrollTo(0, y);
   afterRender();
   var a = ss(ASK_KEY);
@@ -1626,11 +1687,11 @@ document.addEventListener('keydown', function (e) {
     else if (e.key === 'ArrowLeft') stepDetail(-1);
     return;
   }
-  var c = e.target.closest && e.target.closest('.card[data-pk]');
+  var c = e.target.closest && e.target.closest('.card[data-pk], .trk-r[data-pk]');
   if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDetail(c.dataset.pk, c); }
 });
 root.addEventListener('click', function (e) {
-  var c = e.target.closest('.card[data-pk], .tour-t tr[data-pk]');
+  var c = e.target.closest('.card[data-pk], .tour-t tr[data-pk], .trk-r[data-pk]');
   if (c) openDetail(c.dataset.pk, c);
 });
 
@@ -2319,6 +2380,14 @@ document.addEventListener('click', function (e) {
 
 /* ===== site visitors (public page only) ===== */
 var VIS = null;
+var STATS_KEY = 'bs5v5-stats-viewer';
+var SHOW_STATS = (function () {
+  if (!ONLINE) return false;
+  var q = location.search;
+  if (/[?&]stats=off\b/.test(q)) { ls(STATS_KEY, null); return false; }
+  if (/[?&]stats=on\b/.test(q)) { ls(STATS_KEY, true); return true; }
+  return ls(STATS_KEY) === true;
+})();
 function barChartHTML(vals, labels, opt) {
   var W = 720, H = 210, L = 30, R = 8, T = 14, B = 26;
   var max = Math.max.apply(null, vals.concat([1]));
@@ -2355,9 +2424,10 @@ function accessBodyHTML() {
     '<div class="acc-t"><span>いちばん多い時間帯</span><b class="num">' + (Math.max.apply(null, v.byHour) > 0 ? peak + '<small>時台</small>' : '—') + '</b></div></div>' +
     '<div class="acc-charts"><figure class="acc-c"><figcaption>直近24時間<small>1時間ごとの訪問者数（右端が今）</small></figcaption>' + l24 + '</figure>' +
     '<figure class="acc-c"><figcaption>時間帯ごとの平均<small>この7日間・1日あたり（黄色が今の時間）</small></figcaption>' + hr + '</figure></div>' +
-    '<p class="acc-note">同じブラウザは1時間に1人として数えます。誰が見たかは記録していません。棒にふれると人数が出ます。</p><div class="ctip" id="ctip" hidden></div>';
+    '<p class="acc-note">同じブラウザは1時間に1人として数えます。誰が見たかは記録していません。棒にふれると人数が出ます。この欄は、この端末でだけ表示されています（ほかの人には見えません）。</p><div class="ctip" id="ctip" hidden></div>';
 }
 function accessHTML() {
+  if (!SHOW_STATS) return '';
   return '<section class="sec" id="access"><div class="wrap">' + secH('ACCESS', 'サイトのアクセス') + '<div id="acc-body">' + (ONLINE ? accessBodyHTML() : '<p class="empty">アクセス数は公開ページで集計・表示されます。</p>') + '</div></div></section>';
 }
 function paintAccess() { var b = document.getElementById('acc-body'); if (b && ONLINE) b.innerHTML = accessBodyHTML(); }
@@ -2431,7 +2501,7 @@ render();
 startBg();
 loadRemote();
 setInterval(loadRemote, 5 * 6e4);
-if (ONLINE) { loadRatings(); setInterval(loadRatings, 2 * 6e4); rateTick(); setInterval(rateTick, 5000); loadCheer(); setInterval(function () { if (!document.hidden) loadCheer(); }, 6e4); loadStats(); setInterval(function () { if (!document.hidden) loadStats(); }, 10 * 6e4); visitPing(); setInterval(visitPing, 2 * 6e4); document.addEventListener('visibilitychange', function () { if (!document.hidden) visitPing(); }); setTimeout(loadVisits, 800); setInterval(function () { if (!document.hidden) loadVisits(); }, 5 * 6e4); setInterval(tickCd, 1000); }
+if (ONLINE) { loadRatings(); setInterval(function () { if (!document.hidden) loadRatings(); }, 5 * 6e4); rateTick(); setInterval(rateTick, 5000); loadCheer(); setInterval(function () { if (!document.hidden) loadCheer(); }, 3 * 6e4); loadStats(); setInterval(function () { if (!document.hidden) loadStats(); }, 10 * 6e4); visitPing(); setInterval(visitPing, 2 * 6e4); document.addEventListener('visibilitychange', function () { if (!document.hidden) visitPing(); }); if (SHOW_STATS) { setTimeout(loadVisits, 800); setInterval(function () { if (!document.hidden) loadVisits(); }, 5 * 6e4); } setInterval(tickCd, 1000); }
 (function () { var op = ss(OPEN_KEY); if (op) openDetail(op); })();
 (function () {
   var pend = ss(PENDING_KEY);

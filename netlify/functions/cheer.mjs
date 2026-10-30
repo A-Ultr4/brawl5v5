@@ -35,6 +35,7 @@ async function snapshot(store, round, cid) {
   const { blobs } = await store.list({ prefix: "k/" });
   const today = fmtDay(Date.now());
   const totals = {}, fanSets = {}, mine = {};
+  const perDay = {}, users = {}; // users[cid] = { days: {day: target}, tg: {target: n} }
   let all = 0, todayAll = 0;
   for (const b of blobs) {
     const parts = b.key.split("/");
@@ -48,23 +49,39 @@ async function snapshot(store, round, cid) {
     all++;
     if (day === today) todayAll++;
     if (who === cid) mine[day] = target;
+    perDay[day] = (perDay[day] || 0) + 1;
+    const u = (users[who] ||= { days: {}, tg: {} });
+    u.days[day] = target;
+    u.tg[target] = (u.tg[target] || 0) + 1;
   }
   const fans = {};
   for (const k in fanSets) fans[k] = fanSets[k].size;
 
   // streak: consecutive days ending today (or yesterday if today not yet done)
-  let streak = 0;
-  let d = mine[today] ? today : shift(today, -1);
-  while (mine[d]) { streak++; d = shift(d, -1); }
-  // best streak this tournament
-  let best = 0, run = 0, prev = null;
-  for (const day of Object.keys(mine).sort()) {
-    run = prev && shift(prev, 1) === day ? run + 1 : 1;
-    best = Math.max(best, run);
-    prev = day;
-  }
+  const streakOf = (days) => {
+    let n = 0, d = days[today] ? today : shift(today, -1);
+    while (days[d]) { n++; d = shift(d, -1); }
+    let best = 0, run = 0, prev = null;
+    for (const day of Object.keys(days).sort()) {
+      run = prev && shift(prev, 1) === day ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = day;
+    }
+    return { streak: n, best };
+  };
+  const { streak, best } = streakOf(mine);
   const week = [];
-  for (let i = 6; i >= 0; i--) { const w = shift(today, -i); week.push({ day: w, on: !!mine[w] }); }
+  for (let i = 6; i >= 0; i--) { const w = shift(today, -i); week.push({ day: w, on: !!mine[w], n: perDay[w] || 0 }); }
+  // everyone together: a day counts when anyone cheered
+  const group = streakOf(perDay);
+  const people = Object.entries(users).map(([who, u]) => {
+    const s = streakOf(u.days);
+    const fav = Object.entries(u.tg).sort((a, b) => b[1] - a[1])[0][0];
+    return { me: who === cid, streak: s.streak, best: s.best, days: Object.keys(u.days).length, today: !!u.days[today], fav };
+  }).sort((a, b) => b.streak - a.streak || b.best - a.best || b.days - a.days);
+  const top = people.slice(0, 8);
+  const meRow = people.findIndex((x) => x.me);
+  if (meRow >= 8) top.push({ ...people[meRow], rank: meRow + 1 });
   return {
     day: today,
     nextAt: dayMs(shift(today, 1)) - 12 * 36e5, // next Japan midnight (ms)
@@ -73,6 +90,7 @@ async function snapshot(store, round, cid) {
     totals,
     fans,
     me: { streak, best, today: mine[today] || null, days: Object.keys(mine).length, week },
+    all: { streak: group.streak, best: group.best, days: Object.keys(perDay).length, people: people.length, today: todayAll, list: top },
   };
 }
 

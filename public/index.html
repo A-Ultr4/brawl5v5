@@ -1915,12 +1915,13 @@ function rankValue(s) {
   return null;
 }
 function topTrophies(s) { var m = String(s || '').match(/([\d,]+)\s*）?\s*$/); return m ? Number(m[1].replace(/,/g, '')) : null; }
-/* profile score (1000): ガチバトル 60%（最高ランク32%・現在ランク28%）・プレステージ2 20%・トロフィー10%・プレステージ1 5%・3対3勝利5% */
+/* profile score (1000): ガチバトル57%（最高ランク30%・現在ランク27%）・プレステージ2 18%・キャラ最高トロフィー10%・トロフィー5%・プレステージ1 5%・3対3勝利5% */
 var SCORE_PARTS = [
-  { key: 'rankBest', label: 'ガチバトル最高ランク', w: 320, v: function (p) { var r = rankValue(p.rankBest); return r == null ? null : r / 22; } },
-  { key: 'rank', label: 'ガチバトル現在ランク', w: 280, v: function (p) { var r = rankValue(p.rank); return r == null ? null : r / 22; } },
-  { key: 'p2', label: 'プレステージ2のキャラ', w: 200, v: function (p) { return isNum(p.p2) ? Number(p.p2) / 6 : null; } },
-  { key: 'trophies', label: 'トロフィー', w: 100, v: function (p) { return isNum(p.trophies) ? Number(p.trophies) / 70000 : null; } },
+  { key: 'rankBest', label: 'ガチバトル最高ランク', w: 300, v: function (p) { var r = rankValue(p.rankBest); return r == null ? null : r / 22; } },
+  { key: 'rank', label: 'ガチバトル現在ランク', w: 270, v: function (p) { var r = rankValue(p.rank); return r == null ? null : r / 22; } },
+  { key: 'p2', label: 'プレステージ2のキャラ', w: 180, v: function (p) { return isNum(p.p2) ? Number(p.p2) / 6 : null; } },
+  { key: 'topBrawler', label: 'キャラ最高トロフィー', w: 100, v: function (p) { var t = topTrophies(p.topBrawler); return t == null ? null : t / 2500; } },
+  { key: 'trophies', label: 'トロフィー', w: 50, v: function (p) { return isNum(p.trophies) ? Number(p.trophies) / 70000 : null; } },
   { key: 'p1', label: 'プレステージ1以上のキャラ', w: 50, v: function (p) { return isNum(p.p1) ? Number(p.p1) / 30 : null; } },
   { key: 'wins3v3', label: '3対3勝利', w: 50, v: function (p) { return isNum(p.wins3v3) ? Number(p.wins3v3) / 6000 : null; } }
 ];
@@ -2011,7 +2012,7 @@ function detailHTML(s, pk) {
     barHTML('キャラ所持数', p.brawlers, isNum(total) ? Number(total) : max('brawlers'), isNum(total) ? '<small>/' + total + '</small>' : '') +
     '</div>' +
     (rows.length ? '<dl class="pm-list">' + rows.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
-    '<p class="pm-note">' + (me && me.tour ? 'スコアは、プロフィール60%（ガチバトルのランク・プレステージ2のキャラ数・トロフィー・プレステージ1のキャラ数・3対3の勝利数）と、大会の成績40%（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）で計算した1000点満点の目安です。' : 'スコアは「ガチバトル最高ランク32%・ガチバトル現在ランク28%・プレステージ2のキャラ数20%・トロフィー10%・プレステージ1以上のキャラ数5%・3対3の勝利数5%」で計算した1000点満点の目安です。キャラの数やレベルはスコアに入りません。') + '</p>' +
+    '<p class="pm-note">' + (me && me.tour ? 'スコアは、プロフィール60%（ガチバトルのランク・プレステージ2のキャラ数・キャラ最高トロフィー・トロフィー・プレステージ1のキャラ数・3対3の勝利数）と、大会の成績40%（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）で計算した1000点満点の目安です。' : 'スコアは「ガチバトル最高ランク30%・ガチバトル現在ランク27%・プレステージ2のキャラ数18%・キャラ最高トロフィー10%・トロフィー5%・プレステージ1以上のキャラ数5%・3対3の勝利数5%」で計算した1000点満点の目安です。キャラの数はスコアに入りません。') + '</p>' +
     (tag ? '<a class="pm-link" href="https://brawltime.ninja/profile/' + encodeURIComponent(tag) + '" target="_blank" rel="noopener">Brawl Time Ninjaで戦績をくわしく見る ↗</a>' : '') +
     '</div></div>' +
     '<footer class="pm-nav"><button type="button" class="mini" data-step="-1" aria-label="前の選手">‹ 前へ</button><span class="pm-at">' + (at ? 'データ更新 ' + esc(fmtShort(at)) : '') + '</span><button type="button" class="mini" data-step="1" aria-label="次の選手">次へ ›</button></footer>' +
@@ -3422,7 +3423,7 @@ function growthHTML(s) {
       var sub = (tr != null ? 'トロフィー ' + fmt(p.trophies) + ' → ' + fmt(x.p.trophies) + '（' + (tr >= 0 ? '+' : '') + fmt(tr) + '）' : '') + (p.rank && x.p.rank && p.rank !== x.p.rank ? ' ・ ランク ' + esc(p.rank) + ' → ' + esc(x.p.rank) : '');
       rows.push({ x: x, a: A.total, b: B.total, max: 1000, sub: sub });
     });
-    note = 'プロフィールスコア（1000点満点）は、ガチバトルのランク・プレステージのキャラ数・トロフィー・3対3勝利数から出した点数です（前の大会の記録にプレステージの数がないときは、いまの数でくらべています）。' + esc(name) + 'のときの記録と、いまの記録をくらべています。';
+    note = 'プロフィールスコア（1000点満点）は、ガチバトルのランク・プレステージのキャラ数・キャラ最高トロフィー・トロフィー・3対3勝利数から出した点数です（前の大会の記録にプレステージの数がないときは、いまの数でくらべています）。' + esc(name) + 'のときの記録と、いまの記録をくらべています。';
   }
   rows.forEach(function (r) { r.d = r.a != null && r.b != null ? r.b - r.a : null; });
   rows.sort(function (p, q) { return (q.d == null ? -1e9 : q.d) - (p.d == null ? -1e9 : p.d) || (q.a || 0) - (p.a || 0); });

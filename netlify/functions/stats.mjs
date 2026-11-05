@@ -66,6 +66,9 @@ async function fetchPlayer(tag) {
   const bs = Array.isArray(p.brawlers) ? p.brawlers : Object.values(p.brawlers || {});
   let top = null;
   for (const b of bs) if (!top || (b.trophies || 0) > (top.trophies || 0)) top = b;
+  // prestige per brawler: official field when present, otherwise every 1000 trophies
+  const pl = (b) => (typeof b.prestigeLevel === "number" ? b.prestigeLevel : Math.floor((b.trophies || 0) / 1000));
+  const p1 = bs.filter((b) => pl(b) >= 1).length, p2 = bs.filter((b) => pl(b) >= 2).length;
   return {
     trophies: p.trophies,
     highest: p.highestTrophies,
@@ -76,6 +79,7 @@ async function fetchPlayer(tag) {
     prestige: p.totalPrestigeLevel,
     rank: p.rankedRankName ? rankJa(p.rankedRankName) : undefined,
     rankBest: p.highestAllTimeRankedRankName ? rankJa(p.highestAllTimeRankedRankName) : undefined,
+    p1, p2,
     topBrawler: top ? `${nameJa(top.name)}（${Number(top.trophies || 0).toLocaleString("en-US")}）` : "",
   };
 }
@@ -111,7 +115,8 @@ export default async (req) => {
   try { cur = await store.get("latest", { type: "json" }); } catch {}
   const age = cur && cur.at ? Date.now() - Date.parse(cur.at) : Infinity;
   const force = new URL(req.url).searchParams.get("refresh") === "1" && age > MIN_FORCE;
-  if (!cur || force || age > TTL) {
+  const stale = cur && cur.players && Object.values(cur.players).some((x) => x && x.p2 === undefined);
+  if (!cur || force || age > TTL || (stale && age > MIN_FORCE)) {
     try { cur = await refresh(store, cur); }
     catch (e) { if (!cur) return json({ error: String((e && e.message) || e) }, 502); }
   }

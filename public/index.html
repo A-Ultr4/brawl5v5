@@ -1525,18 +1525,18 @@ function lift(v) { return Math.pow(Math.min(1, Math.max(0, v || 0)), TOUR_LIFT);
 function dmgRate(c) { return DMG_RATE[String(c || '').trim()] || 1; }
 function sdmgOf(o) { return o.sdmg != null ? o.sdmg : o.dmg; }
 var TOUR_PARTS = [
-  { label: '大会：撃破', w: 120, v: function (o, mx) { return mx.k ? (o.k / o.g) / mx.k : 0; } },
-  { label: '大会：生存', w: 80, v: function (o, mx) { return (mx.d + 0.5) / (o.d / o.g + 0.5); } },
-  { label: '大会：ダメージ＋回復', w: 120, v: function (o, mx) { return mx.c ? ((sdmgOf(o) + o.heal) / o.g) / mx.c : 0; } },
-  { label: '大会：スター', w: 50, v: function (o, mx) { return mx.star ? o.star / mx.star : 0; } },
-  { label: '大会：勝率', w: 30, v: function (o) { return o.w / o.g; } }
+  { label: '大会：撃破', w: 150, v: function (o, mx) { return mx.k ? (o.k / o.g) / mx.k : 0; } },
+  { label: '大会：生存', w: 100, v: function (o, mx) { return (mx.d + 0.5) / (o.d / o.g + 0.5); } },
+  { label: '大会：ダメージ＋回復', w: 150, v: function (o, mx) { return mx.c ? ((sdmgOf(o) + o.heal) / o.g) / mx.c : 0; } },
+  { label: '大会：スター', w: 60, v: function (o, mx) { return mx.star ? o.star / mx.star : 0; } },
+  { label: '大会：勝率', w: 40, v: function (o) { return o.w / o.g; } }
 ];
 function powerScore(p, ctx) {
   var o = ctx && ctx.T.by[tagKey(p.tag)];
   if (!o || !o.g) return powerScoreBase(p);
   var parts = [], total = 0;
   SCORE_PARTS.forEach(function (sp) {
-    var v = sp.v(p), w = Math.round(sp.w * 0.6);
+    var v = sp.v(p), w = Math.round(sp.w * 0.5);
     var pts = v == null ? 0 : Math.round(Math.min(1, Math.max(0, v)) * w);
     parts.push({ label: sp.label, pts: pts, max: w, known: v != null }); total += pts;
   });
@@ -1561,14 +1561,14 @@ function tourTableHTML(s) {
       '<td class="num">' + fmt(o.dmg) + '</td><td class="num">' + (o.heal ? fmt(o.heal) : '—') + '</td><td class="num stc">' + (o.star ? '★' + o.star : '—') + '</td><td class="awc">' + (awText(o) || '—') + '</td></tr>';
   }).join('');
   return '<div class="tour"><h3 class="tour-h">選手成績ランキング<small>' + T.games + '試合の合計 ・ 押すと選手の詳細</small></h3><div class="tour-scroll"><table class="tour-t"><thead><tr><th>順位</th><th>選手</th><th>スコア</th><th>勝-敗</th><th>撃破</th><th>デス</th><th>K/D</th><th>ダメージ</th><th>回復</th><th>スター</th><th>賞</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
-    '<p class="tour-note">順位は、プロフィール（ランク・トロフィーなど）60%と、この大会の成績（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）40%を合わせたスコアの順です。</p></div>';
+    '<p class="tour-note">順位は、プロフィール（ランク・トロフィーなど）50%と、大会の成績（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）50%を合わせたスコアの順です。</p></div>';
 }
 /* tournament-only ranking: just the box scores, no profile numbers (100-point scale) */
 function tourOnlyRank(s) {
   var ctx = tourCtx(s); if (!ctx) return [];
   var rows = allPlayers(s).map(function (x) {
     var o = ctx.T.by[tagKey(x.p.tag)]; if (!o || !o.g) return null;
-    var parts = TOUR_PARTS.map(function (tp) { var w = tp.w / 4; return { label: tp.label.replace('大会：', ''), pts: lift(tp.v(o, ctx.mx)) * w, max: w }; });
+    var parts = TOUR_PARTS.map(function (tp) { var w = tp.w / 5; return { label: tp.label.replace('大会：', ''), pts: lift(tp.v(o, ctx.mx)) * w, max: w }; });
     var raw = parts.reduce(function (a, q) { return a + q.pts; }, 0);
     return { x: x, o: o, raw: raw, pts: Math.round(raw), parts: parts };
   }).filter(Boolean);
@@ -1593,7 +1593,7 @@ function tourRankHTML(s) {
   }).join('');
   return '<details class="fc trk"><summary><span class="fc-ic">' + ICON.trophy + '</span><span class="fc-t">大会成績だけのランキング<small>' + (tourStats(s).prev ? '前大会（' + esc(shortTitle(tourStats(s).prev.title)) + '）' : '') + games + '試合の結果だけで順位づけ ・ 1位 ' + esc(top.x.p.name) + '</small></span><span class="fc-ar" aria-hidden="true">▾</span></summary>' +
     '<div class="fc-body"><ol class="trk-l">' + list + '</ol>' +
-    '<p class="fc-note">トロフィーやランクは使わず、この大会の試合結果だけで出した100点満点のスコアです（撃破30・生存20・ダメージ＋回復30・スタープレイヤー12.5・勝率7.5）。1試合あたりの成績を、いちばん良かった選手を基準にくらべて、全体が高めに出るように調整しています。コレットのダメージは割合ダメージで大きく出るので、2/3で計算しています。押すと選手の詳細が見られます。</p></div></details>';
+    '<p class="fc-note">トロフィーやランクは使わず、この大会の試合結果だけで出した100点満点のスコアです（撃破30・生存20・ダメージ＋回復30・スタープレイヤー12・勝率8）。1試合あたりの成績を、いちばん良かった選手を基準にくらべて、全体が高めに出るように調整しています。コレットのダメージは割合ダメージで大きく出るので、2/3で計算しています。押すと選手の詳細が見られます。</p></div></details>';
 }
 function tourRowHTML(s, p) {
   var T = tourStats(s), o = T.by[tagKey(p.tag)];
@@ -2012,7 +2012,7 @@ function detailHTML(s, pk) {
     barHTML('キャラ所持数', p.brawlers, isNum(total) ? Number(total) : max('brawlers'), isNum(total) ? '<small>/' + total + '</small>' : '') +
     '</div>' +
     (rows.length ? '<dl class="pm-list">' + rows.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
-    '<p class="pm-note">' + (me && me.tour ? 'スコアは、プロフィール60%（ガチバトルのランク・プレステージ2のキャラ数・キャラ最高トロフィー・トロフィー・プレステージ1のキャラ数・3対3の勝利数）と、大会の成績40%（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）で計算した1000点満点の目安です。' : 'スコアは「ガチバトル最高ランク34%・ガチバトル現在ランク30%・プレステージ2のキャラ数23%・3対3の勝利数5%・キャラ最高トロフィー4%・トロフィー2%・プレステージ1以上のキャラ数2%」で計算した1000点満点の目安です。キャラの数はスコアに入りません。') + '</p>' +
+    '<p class="pm-note">' + (me && me.tour ? 'スコアは、プロフィール50%（ガチバトルのランク・プレステージ2のキャラ数・キャラ最高トロフィー・トロフィー・プレステージ1のキャラ数・3対3の勝利数）と、大会の成績50%（撃破・生存・ダメージ＋回復・スタープレイヤー・勝率）で計算した1000点満点の目安です。' : 'スコアは「ガチバトル最高ランク34%・ガチバトル現在ランク30%・プレステージ2のキャラ数23%・3対3の勝利数5%・キャラ最高トロフィー4%・トロフィー2%・プレステージ1以上のキャラ数2%」で計算した1000点満点の目安です。キャラの数はスコアに入りません。') + '</p>' +
     (tag ? '<a class="pm-link" href="https://brawltime.ninja/profile/' + encodeURIComponent(tag) + '" target="_blank" rel="noopener">Brawl Time Ninjaで戦績をくわしく見る ↗</a>' : '') +
     '</div></div>' +
     '<footer class="pm-nav"><button type="button" class="mini" data-step="-1" aria-label="前の選手">‹ 前へ</button><span class="pm-at">' + (at ? 'データ更新 ' + esc(fmtShort(at)) : '') + '</span><button type="button" class="mini" data-step="1" aria-label="次の選手">次へ ›</button></footer>' +
@@ -3348,7 +3348,7 @@ function tourOnlyFrom(ms) {
   });
   Object.keys(T.by).forEach(function (key) {
     var o = T.by[key]; if (!o.g) return;
-    var raw = TOUR_PARTS.reduce(function (a, tp) { return a + lift(tp.v(o, mx)) * tp.w / 4; }, 0);
+    var raw = TOUR_PARTS.reduce(function (a, tp) { return a + lift(tp.v(o, mx)) * tp.w / 5; }, 0);
     out[key] = { pts: Math.round(raw), raw: raw, o: o };
   });
   return { by: out, games: T.games };

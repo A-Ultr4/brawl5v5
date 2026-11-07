@@ -1,0 +1,17 @@
+{
+  "name": "ブロスタ5v5大会",
+  "short_name": "ブロスタ5v5",
+  "description": "ブロスタ5v5大会の日程・選手・ライブ速報",
+  "start_url": "/?src=home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050817",
+  "theme_color": "#050817",
+  "lang": "ja",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

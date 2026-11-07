@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png"><meta name="theme-color" content="#050817"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ブロスタ5v5"></head><body>
 <title>第三回ブロスタ5v5大会</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1219,6 +1219,32 @@ html.fx-on .vs-go:not(:disabled){animation:goPulse 1.3s ease-in-out infinite}
 .la-log{flex-basis:100%;font-size:.8rem;color:var(--ok)}
 .la-log.err{color:var(--red-hi)}
 .la-log small{color:var(--mute)}
+
+/* ---------- add to home screen ---------- */
+.a2-btn{background:none;border:1px solid var(--line-hi);color:var(--ink);padding:5px 12px;font-weight:700;font-size:.8rem}
+.a2m{width:min(520px,100%)}
+.a2-b{align-items:stretch}
+.a2-hero{display:flex;align-items:center;gap:14px}
+.a2-hero img{width:72px;height:72px;border-radius:16px;flex:none;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.a2-hero p{display:flex;flex-direction:column;gap:2px}
+.a2-hero b{font-size:1rem}
+.a2-hero small{font-size:.82rem;color:var(--dim)}
+.a2-tabs{margin:4px 0 0}
+.a2-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.a2-steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;padding:12px;background:var(--void);border:1px solid var(--line)}
+.a2-steps li>b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#1b1400;font-weight:800}
+.a2-steps li span{font-size:.92rem;line-height:1.7}
+.a2-steps em{font-style:normal;font-weight:800;color:var(--gold)}
+.a2-ic{width:20px;height:20px;vertical-align:-4px;color:var(--blue-hi)}
+.a2-note{font-size:.85rem;color:var(--dim)}
+.a2-note b{color:var(--ink)}
+.a2-go{align-self:center}
+.a2-ban{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translate(-50%,0);z-index:75;width:min(460px,calc(100% - 24px));display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;background:linear-gradient(160deg,var(--panel-2),var(--deep));border:1px solid var(--gold);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.a2-ban img{border-radius:10px;flex:none}
+.a2-ban p{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.a2-ban b{font-size:.9rem}
+.a2-ban small{font-size:.74rem;color:var(--dim)}
+.a2-ban .pm-x{margin-left:0;width:32px;height:32px}
 </style>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div id="root"></div>
@@ -1665,7 +1691,7 @@ function faqHTML(s) {
 
 function footHTML(s) {
   var d = parseDate(s.updatedAt);
-  return '<footer class="foot"><div class="wrap"><span>' + esc(s.meta.title) + '</span><span class="num">最終更新 ' + (d ? esc(fmtDate(d)) : '—') + '</span></div></footer>';
+  return '<footer class="foot"><div class="wrap"><span>' + esc(s.meta.title) + '</span>' + a2hsBtnHTML() + '<span class="num">最終更新 ' + (d ? esc(fmtDate(d)) : '—') + '</span></div></footer>';
 }
 
 function render() {
@@ -3940,6 +3966,84 @@ function calHTML(s) {
 root.addEventListener('click', function (e) {
   var cd = e.target.closest('[data-card]'); if (cd) { e.preventDefault(); openCard(cd.dataset.card); }
 });
+
+/* ===== ホーム画面に追加（ガイド） ===== */
+var A2HS_KEY = 'bs5v5-a2hs', a2hsEvt = null, A2HS_TAB = null;
+var STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function devKind() {
+  var ua = navigator.userAgent || '';
+  var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (ios) return /CriOS/.test(ua) ? 'ios-chrome' : /FxiOS|EdgiOS|Line\//.test(ua) ? 'ios-other' : 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'pc';
+}
+window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); a2hsEvt = e; });
+window.addEventListener('appinstalled', function () { a2hsEvt = null; ls(A2HS_KEY, 'done'); });
+var SHARE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" class="a2-ic"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+var PLUS_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" class="a2-ic"><rect x="4" y="4" width="16" height="16" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function a2Steps(kind) {
+  var st = function (arr) { return '<ol class="a2-steps">' + arr.map(function (t, i) { return '<li><b class="num">' + (i + 1) + '</b><span>' + t + '</span></li>'; }).join('') + '</ol>'; };
+  if (kind === 'ios') return st([
+    '画面の下（iPad は上）にある <em>共有</em> ボタン ' + SHARE_SVG + ' を押します。見つからないときは <em>…</em> を押してから <em>共有</em> を選んでください。',
+    'メニューを下にスクロールして、<em>ホーム画面に追加</em> ' + PLUS_SVG + ' を押します。',
+    '右上の <em>追加</em> を押すと、ホーム画面にアイコンが出てきます。'
+  ]);
+  if (kind === 'ios-chrome') return st([
+    'アドレスバーの右にある <em>共有</em> ボタン ' + SHARE_SVG + ' を押します。',
+    '<em>ホーム画面に追加</em> を押します（出てこないときは、Safari でこのページを開いてください）。',
+    '右上の <em>追加</em> を押すと、ホーム画面にアイコンが出てきます。'
+  ]);
+  if (kind === 'ios-other') return '<p class="a2-note">このアプリの中のブラウザからは追加できません。<b>Safari</b> でこのページを開いてから、もう一度このボタンを押してください。</p>';
+  if (kind === 'android') return (a2hsEvt ? '<button type="button" class="btn vs-go a2-go" data-a2hs="install">📲 ホーム画面に追加する</button><p class="a2-note">うまくいかないときは、下の手順でもできます。</p>' : '') + st([
+    'Chrome の右上にある <em>︙</em>（メニュー）を押します。',
+    '<em>ホーム画面に追加</em> か <em>アプリをインストール</em> を押します。',
+    '<em>追加</em>（または <em>インストール</em>）を押すと、ホーム画面にアイコンが出てきます。'
+  ]);
+  return (a2hsEvt ? '<button type="button" class="btn vs-go a2-go" data-a2hs="install">💻 アプリとして追加する</button>' : '') + st([
+    'Chrome か Edge で開いて、アドレスバーの右にある <em>インストール</em> ボタンを押します（メニューの <em>アプリをインストール</em> でも同じ）。',
+    '<em>インストール</em> を押すと、デスクトップやスタートメニューから開けるようになります。'
+  ]);
+}
+function a2BodyHTML() {
+  var kind = A2HS_TAB || devKind();
+  var tabs = [['ios', 'iPhone・iPad'], ['android', 'Android'], ['pc', 'パソコン']].map(function (t) {
+    var on = kind === t[0] || (t[0] === 'ios' && /^ios/.test(kind));
+    return '<button type="button" role="tab" aria-selected="' + on + '" class="' + (on ? 'on' : '') + '" data-a2tab="' + t[0] + '">' + t[1] + '</button>';
+  }).join('');
+  return '<div class="a2-hero"><img src="/icons/apple-touch-icon.png" alt="" width="72" height="72"><p><b>ホーム画面に追加すると、アプリみたいにすぐ開けます</b><small>大会の日のライブ速報や予想も、ワンタップで見られます。</small></p></div>' +
+    '<div class="gr-tabs a2-tabs" role="tablist">' + tabs + '</div>' + a2Steps(kind);
+}
+function openA2hs() {
+  var w = document.createElement('div'); w.className = 'pm-wrap a2-wrap';
+  w.innerHTML = '<div class="pm-back" data-a2hs="close"></div><div class="cardm a2m" role="dialog" aria-label="ホーム画面に追加"><div class="pm-top"><span class="code">ADD TO HOME</span><button type="button" class="pm-x" data-a2hs="close" aria-label="閉じる">✕</button></div><div class="cardm-b a2-b">' + a2BodyHTML() + '</div></div>';
+  document.body.appendChild(w); document.documentElement.classList.add('locked');
+  var bn = document.querySelector('.a2-ban'); if (bn) bn.remove();
+  if (FX) fxA(w.querySelector('.a2m'), [{ transform: 'translateY(40px) scale(.95)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 400, easing: 'cubic-bezier(.2,.9,.3,1)' });
+}
+function closeA2hs() { var w = document.querySelector('.a2-wrap'); if (w) w.remove(); document.documentElement.classList.remove('locked'); }
+function a2hsBtnHTML() { return ONLINE && !STANDALONE ? '<button type="button" class="a2-btn" data-a2hs="open">📲 ホーム画面に追加</button>' : ''; }
+document.addEventListener('click', function (e) {
+  var t = e.target.closest && e.target.closest('[data-a2hs],[data-a2tab]'); if (!t) return;
+  if (t.dataset.a2tab) { A2HS_TAB = t.dataset.a2tab; var b = document.querySelector('.a2-b'); if (b) b.innerHTML = a2BodyHTML(); return; }
+  var a = t.dataset.a2hs;
+  if (a === 'open') return openA2hs();
+  if (a === 'close') return closeA2hs();
+  if (a === 'later') { ls(A2HS_KEY, Date.now()); var bn = document.querySelector('.a2-ban'); if (bn) bn.remove(); return; }
+  if (a === 'install' && a2hsEvt) { a2hsEvt.prompt(); a2hsEvt.userChoice.then(function (r) { if (r && r.outcome === 'accepted') { ls(A2HS_KEY, 'done'); closeA2hs(); fxToast('📲 ホーム画面に追加しました！'); } }).catch(function () {}); a2hsEvt = null; }
+});
+/* small one-time suggestion on phones and tablets (not when already opened from the home screen) */
+(function () {
+  if (!ONLINE || STANDALONE || devKind() === 'pc') return;
+  var v = ls(A2HS_KEY);
+  if (v === 'done' || (typeof v === 'number' && Date.now() - v < 7 * 864e5)) return;
+  setTimeout(function () {
+    if (document.querySelector('.a2-ban,.a2-wrap,.pm-wrap,.vsb,.rate-wrap')) return;
+    var b = document.createElement('div'); b.className = 'a2-ban'; b.setAttribute('role', 'status');
+    b.innerHTML = '<img src="/icons/apple-touch-icon.png" alt="" width="40" height="40"><p><b>ホーム画面に追加しよう</b><small>アプリみたいにすぐ開けます</small></p><button type="button" class="mini add" data-a2hs="open">やり方</button><button type="button" class="pm-x" data-a2hs="later" aria-label="閉じる">✕</button>';
+    document.body.appendChild(b);
+    fxA(b, [{ transform: 'translate(-50%,120%)' }, { transform: 'translate(-50%,0)' }], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1)' });
+  }, 20000);
+})();
 
 render();
 startBg();
